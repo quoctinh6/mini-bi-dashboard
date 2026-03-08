@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  role  String
+  zone  String?
+}
+
+model dashboard_1 {
+  Order_ID   Int       @id @default(autoincrement())
+  Order_Date DateTime? @db.Date
+  Department String?   @db.VarChar(10)
+  Revenue    Int?
+  Province   String?   @db.VarChar(10)
+  Zone       Decimal?  @db.Decimal(10, 2)
+}
+
+model DashboardConfig {
+  id          Int    @id @default(autoincrement())
+  userId      Int
+  layoutConfig Json
+}
