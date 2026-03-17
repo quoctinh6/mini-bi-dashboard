@@ -8,6 +8,8 @@ import vietnamGeoJson from './vn-all.geo.json';
 // 2. Đăng ký bản đồ với ECharts (tên 'vietnam' sẽ được gọi ở dưới)
 echarts.registerMap('vietnam', vietnamGeoJson as any);
 
+
+
 interface GeoChartProps {
     data?: { label: string; value: number }[]; // Thêm data props để tương thích với Dashboard cha
 }
@@ -21,6 +23,7 @@ export const GeoChart: React.FC<GeoChartProps> = ({ data }) => {
       { name: 'Đà Nẵng', value: 400 },
       { name: 'Hải Phòng', value: 300 },
   ];
+
 
   const maxVal = Math.max(...chartData.map(d => d.value), 1000);
 
@@ -67,6 +70,8 @@ export const GeoChart: React.FC<GeoChartProps> = ({ data }) => {
       },
     ],
   };
+  const soTinhThanh = vietnamGeoJson.features.length;
+  console.log(soTinhThanh);
 
   return <ReactECharts option={option} style={{ height: '500px', width: '100%' }} />;
 };
