@@ -11,7 +11,7 @@ interface BaseChartProps {
 
 export const BaseChart: React.FC<BaseChartProps> = ({ option, height = '400px', onEvents }) => {
     return (
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-full">
+        <div className="bg- p-4 rounded-2xl shadow-sm border border-gray-100 w-full">
             <ReactECharts
                 option={option}
                 style={{ height, width: '100%' }}
