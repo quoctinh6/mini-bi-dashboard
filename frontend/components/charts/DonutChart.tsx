@@ -136,7 +136,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     return (
         <div
             className={cn('flex flex-col rounded-2xl bg-[#0e1322] p-6 shadow-sm overflow-hidden', className)}
-            style={{ width: size + 150 }}
+            style={className?.includes('w-full') ? undefined : { width: size + 150 }}
             {...props}
         >
             {/* Header */}
