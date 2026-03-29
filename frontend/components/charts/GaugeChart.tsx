@@ -62,13 +62,13 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
                 <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
             </div>
             
-            <div className="relative w-full h-[180px]">
+            <div className="relative flex-1 min-h-0 w-full">
                 <div className="absolute inset-0">
-                    <BaseChart option={option} height="100%" />
+                    <BaseChart option={option} height="100%" transparent />
                 </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-4 flex flex-col gap-2 flex-shrink-0">
                 <div className="text-base font-bold text-white mb-1">
                     Tổng: {totalValue}
                 </div>

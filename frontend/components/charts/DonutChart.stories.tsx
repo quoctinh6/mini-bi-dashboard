@@ -73,33 +73,3 @@ export const Default: Story = {
     showPercentage: true,
   },
 };
-
-export const CoolPalette: Story = {
-  args: {
-    ...Default.args,
-    palette: 'cool',
-  },
-};
-
-export const WarmPalette: Story = {
-  args: {
-    ...Default.args,
-    palette: 'warm',
-  },
-};
-
-export const PieChart: Story = {
-  args: {
-    ...Default.args,
-    innerRadius: 0,
-    title: 'Pie Chart (không lỗ)',
-  },
-};
-
-export const CustomColors: Story = {
-  args: {
-    ...Default.args,
-    customColors: ['#ff006e', '#fb5607', '#ffbe0b', '#3a86ff', '#8338ec'],
-    title: 'Màu tùy chỉnh',
-  },
-};

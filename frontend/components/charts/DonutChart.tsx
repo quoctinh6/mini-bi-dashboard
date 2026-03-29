@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { Palette, Undo2 } from 'lucide-react';
 
 // ── Palette presets để dễ chỉnh trong Storybook controls ──
 export const DONUT_PALETTES = {
@@ -30,6 +31,7 @@ export interface DonutChartProps extends React.HTMLAttributes<HTMLDivElement> {
     innerRadius?: number;           // 0‑100, default 60 (% bán kính ngoài)
     showPercentage?: boolean;
     size?: number;                  // kích thước SVG px
+    isEditable?: boolean;           // cờ để quản lý màu
 }
 
 const defaultData: DonutSegment[] = [
@@ -79,16 +81,59 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     innerRadius = 60,
     showPercentage = true,
     size = 200,
+    isEditable = false,
     className,
     ...props
 }) => {
+    // ── Lịch sử & Bảng màu nền ──
+    const PALETTES: PaletteName[] = ['vivid', 'cool', 'warm', 'neon', 'pastel'];
+    const [currentTheme, setCurrentTheme] = useState<PaletteName>(palette);
+    
+    const [history, setHistory] = useState<{ overrides: Record<string, string>, theme: PaletteName }[]>([{ overrides: {}, theme: palette }]);
+    const [step, setStep] = useState(0);
+
+    const { overrides: colorOverrides, theme: activeTheme } = history[step] || history[0];
+
+    const pushState = (newOverrides: Record<string, string>, newTheme: PaletteName) => {
+        const newHistory = history.slice(0, step + 1);
+        newHistory.push({ overrides: newOverrides, theme: newTheme });
+        setHistory(newHistory);
+        setStep(newHistory.length - 1);
+        setCurrentTheme(newTheme);
+    };
+
+    const handleColorChange = (label: string, newColor: string) => {
+        pushState({ ...colorOverrides, [label]: newColor }, activeTheme);
+    };
+
+    const cyclePalette = () => {
+        const nextIdx = (PALETTES.indexOf(activeTheme) + 1) % PALETTES.length;
+        pushState({}, PALETTES[nextIdx]); // Khi đổi theme sẽ reset override
+    };
+
+    const handleUndo = useCallback(() => {
+        if (!isEditable) return;
+        setStep(prev => Math.max(0, prev - 1));
+    }, [isEditable]);
+
+    // Lắng nghe Ctrl+Z
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                handleUndo();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [handleUndo]);
+
     // ── Resolve colors ──
-    const colors = customColors ?? DONUT_PALETTES[palette];
+    const colors = customColors ?? DONUT_PALETTES[activeTheme];
 
     // ── Gán màu cho data ──
     const coloredData = data.map((d, i) => ({
         ...d,
-        color: d.color ?? colors[i % colors.length],
+        color: colorOverrides[d.label] || d.color || colors[i % colors.length],
     }));
 
     // ── Top N + Others ──
@@ -135,18 +180,40 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
     return (
         <div
-            className={cn('flex flex-col rounded-2xl bg-[#0e1322] p-6 shadow-sm overflow-hidden', className)}
-            style={className?.includes('w-full') ? undefined : { width: size + 150 }}
+            className={cn('flex flex-col rounded-2xl bg-[#0e1322] p-4 shadow-sm overflow-hidden', className)}
             {...props}
         >
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3 flex-shrink-0">
                 <h3 className="text-base font-medium text-white">{title}</h3>
+                {isEditable && (
+                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                            onClick={handleUndo} 
+                            disabled={step === 0}
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                            title="Hoàn tác (Ctrl+Z)"
+                        >
+                            <Undo2 className="h-3.5 w-3.5" />
+                        </button>
+                        <button 
+                            onClick={cyclePalette} 
+                            className="p-1.5 text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/20 rounded transition-colors"
+                            title="Đổi dải màu gốc"
+                        >
+                            <Palette className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Donut SVG */}
-            <div className="relative flex justify-center items-center">
-                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <div className="relative flex-1 min-h-0 flex justify-center items-center group/svg">
+                <svg
+                    className="max-w-full max-h-full"
+                    viewBox={`0 0 ${size} ${size}`}
+                    preserveAspectRatio="xMidYMid meet"
+                >
                     {segments.map((seg, i) => (
                         <path
                             key={i}
@@ -156,8 +223,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                             style={{
                                 transform: hoverIdx === i ? 'scale(1.045)' : 'scale(1)',
                                 filter: hoverIdx === i ? 'brightness(1.25) drop-shadow(0 0 6px rgba(0,0,0,.35))' : 'none',
-                                cursor: 'pointer',
+                                cursor: isEditable ? 'crosshair' : 'default',
                             }}
+                            onClick={() => isEditable && document.getElementById(`color-picker-donut-${seg.label}`)?.click()}
                             onMouseMove={(e) => {
                                 setTooltip({ x: e.clientX, y: e.clientY, item: { label: seg.label, value: seg.value, pct: seg.pct, color: seg.color! } });
                                 setHoverIdx(i);
@@ -177,13 +245,15 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             </div>
 
             {/* Legend */}
-            <div className="mt-6 flex flex-col gap-3 px-1">
+            <div className="mt-3 flex flex-col gap-2 px-1 flex-shrink-0 overflow-y-auto max-h-[120px]">
                 {coloredData.map((item, i) => {
                     const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
                     return (
                         <div
                             key={i}
-                            className="flex items-center justify-between cursor-default transition-opacity hover:opacity-80"
+                            className="flex items-center justify-between transition-opacity hover:opacity-80"
+                            style={{ cursor: isEditable ? 'pointer' : 'default' }}
+                            onClick={() => isEditable && document.getElementById(`color-picker-donut-${item.label}`)?.click()}
                             onMouseEnter={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 setTooltip({
@@ -194,17 +264,29 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                             }}
                             onMouseLeave={() => setTooltip(null)}
                         >
-                            <div className="flex items-center gap-3">
-                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                <span className="text-sm text-gray-400 font-medium">{item.label}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full flex-shrink-0 ring-1 ring-transparent hover:ring-white transition-all shadow-[0_0_8px_rgba(255,255,255,0.2)]" style={{ backgroundColor: item.color }} />
+                                <span className="text-xs text-gray-400 font-medium truncate group-hover:text-white transition-colors">{item.label}</span>
                             </div>
                             {showPercentage && (
-                                <span className="text-sm font-medium text-white">{pct}%</span>
+                                <span className="text-xs font-medium text-white ml-2">{pct}%</span>
                             )}
                         </div>
                     );
                 })}
             </div>
+
+            {/* Hidden Color Pickers */}
+            {coloredData.map((item, i) => (
+                <input
+                    key={`picker-${i}`}
+                    id={`color-picker-donut-${item.label}`}
+                    type="color"
+                    className="opacity-0 absolute w-0 h-0 pointer-events-none"
+                    value={item.color}
+                    onChange={(e) => handleColorChange(item.label, e.target.value)}
+                />
+            ))}
 
             {/* Tooltip */}
             {tooltip && (

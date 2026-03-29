@@ -25,7 +25,7 @@ export function DataTable({ data, title = 'Thông báo', className, ...props }: 
       )}
       {...props}
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
         <Select icon={<Calendar className="h-3 w-3" />} className="h-8 text-xs bg-slate-800 border-none w-32 py-1 px-2 pr-6">
           <option>Jan 2024</option>
@@ -33,7 +33,7 @@ export function DataTable({ data, title = 'Thông báo', className, ...props }: 
         </Select>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-400">
           <thead className="border-b border-slate-800 text-slate-500 uppercase font-medium">
             <tr>

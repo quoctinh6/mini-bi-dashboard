@@ -23,9 +23,12 @@ export function Header({
       className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-8', className)}
       {...props}
     >
-      <div>
-        <h1 className="text-2xl font-bold text-slate-100">{title}</h1>
-        {subtitle && <p className="text-xs mt-1 text-slate-400">{subtitle}</p>}
+      <div className="flex items-center gap-3">
+        <img src="/Logo Icon.png" alt="Logo" className="h-9 w-9 object-contain" />
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100">{title}</h1>
+          {subtitle && <p className="text-xs mt-1 text-slate-400">{subtitle}</p>}
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
