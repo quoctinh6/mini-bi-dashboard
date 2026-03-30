@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { AppLayout } from './AppLayout';
 
+// AppLayout already includes AuthProvider internally
 const meta = {
-  title: 'App/MainApplication',
+  title: 'Pages/App',
   component: AppLayout,
   parameters: {
     layout: 'fullscreen',

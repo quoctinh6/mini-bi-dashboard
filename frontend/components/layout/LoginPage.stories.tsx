@@ -1,11 +1,11 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { DashboardExample } from './DashboardExample';
+import { LoginPage } from './LoginPage';
 import { AuthProvider } from '@/lib/AuthContext';
 
 const meta = {
-  title: 'Pages/Dashboard',
-  component: DashboardExample,
+  title: 'Pages/Login',
+  component: LoginPage,
   parameters: {
     layout: 'fullscreen',
   },
@@ -16,9 +16,9 @@ const meta = {
       </AuthProvider>
     ),
   ],
-} satisfies Meta<typeof DashboardExample>;
+} satisfies Meta<typeof LoginPage>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Complete: Story = {};
+export const Default: Story = {};

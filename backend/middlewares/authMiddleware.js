@@ -11,11 +11,10 @@ const authMiddleware = (req, res, next) => {
   // 1. Lấy token từ header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Để cho dễ test ở giai đoạn đầu, nếu không có token ta gán mặc định role Giám đốc
-    req.user = { role: 'Giám đốc', zone: 'All' };
+    // Dev mode: no token → default to ADMIN (full access, no RLS)
+    // In production, change this to return 401.
+    req.user = { id: 1, role: 'ADMIN' };
     return next();
-    // Trong thực tế sẽ return 401
-    // return res.status(401).json({ success: false, message: 'No token provided' });
   }
 
   const token = authHeader.split(' ')[1];
@@ -24,7 +23,7 @@ const authMiddleware = (req, res, next) => {
     // 2. Decode token
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    // Payload mong đợi: { id: 1, role: 'Trưởng phòng', zone: 'Miền Bắc' }
+    // Expected JWT payload: { id: 1, role: 'ADMIN' | 'DIRECTOR' | 'MANAGER' | 'EMPLOYEE' }
     req.user = decoded;
     
     next();

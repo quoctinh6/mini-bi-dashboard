@@ -7,23 +7,165 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ════════════════════════════════════════
+// GROUP 1: AUTH & RLS
+// ════════════════════════════════════════
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // 'ADMIN', 'DIRECTOR', 'MANAGER', 'EMPLOYEE'
+  users User[]
+
+  @@map("roles")
+}
+
 model User {
-  id    Int     @id @default(autoincrement())
-  role  String
-  zone  String?
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  email        String?  @unique
+  fullName     String?  @map("full_name")
+  avatarUrl    String?  @map("avatar_url")
+  roleId       Int      @map("role_id")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  role          Role               @relation(fields: [roleId], references: [id])
+  regionAccess  UserRegionAccess[]
+  notifications Notification[]
+  settings      DashboardSetting[]
+
+  @@map("users")
 }
 
-model dashboard_1 {
-  Order_ID   Int       @id @default(autoincrement())
-  Order_Date DateTime? @db.Date
-  Department String?   @db.VarChar(10)
-  Revenue    Int?
-  Province   String?   @db.VarChar(10)
-  Zone       Decimal?  @db.Decimal(10, 2)
+// RLS: Mapping User <-> Region (Many-to-Many)
+model UserRegionAccess {
+  id       Int @id @default(autoincrement())
+  userId   Int @map("user_id")
+  regionId Int @map("region_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region Region @relation(fields: [regionId], references: [id])
+
+  @@unique([userId, regionId])
+  @@map("user_region_access")
 }
 
-model DashboardConfig {
-  id          Int    @id @default(autoincrement())
-  userId      Int
-  layoutConfig Json
+// ════════════════════════════════════════
+// GROUP 2: MASTER DATA
+// ════════════════════════════════════════
+
+model Region {
+  id   Int    @id @default(autoincrement())
+  code String @unique // 'NORTH', 'CENTRAL', 'SOUTH'
+  name String // 'Miền Bắc', 'Miền Trung', 'Miền Nam'
+
+  provinces    Province[]
+  userAccess   UserRegionAccess[]
+  transactions Kernel404[]
+  targets      Target[]
+
+  @@map("regions")
+}
+
+model Province {
+  id       Int    @id @default(autoincrement())
+  code     String @unique // 'HN', 'HCM', 'DN', ...
+  name     String // 'Hà Nội', 'TP.HCM', 'Đà Nẵng', ...
+  regionId Int    @map("region_id")
+
+  region       Region      @relation(fields: [regionId], references: [id])
+  transactions Kernel404[]
+
+  @@map("provinces")
+}
+
+model Category {
+  id           Int         @id @default(autoincrement())
+  code         String      @unique // 'SW', 'HW', 'SVC', ...
+  name         String // 'Phần mềm', 'Thiết bị', 'Dịch vụ', ...
+  transactions Kernel404[]
+
+  @@map("categories")
+}
+
+model Department {
+  id           Int         @id @default(autoincrement())
+  code         String      @unique
+  name         String
+  transactions Kernel404[]
+
+  @@map("departments")
+}
+
+// ════════════════════════════════════════
+// GROUP 3: BUSINESS DATA
+// ════════════════════════════════════════
+
+// Bảng giao dịch chính — tên mới: Kernel404 (thay thế dashboard_1)
+model Kernel404 {
+  id           Int      @id @default(autoincrement())
+  orderDate    DateTime @map("order_date") @db.Date
+  revenue      Decimal  @db.Decimal(15, 2)
+  cost         Decimal  @db.Decimal(15, 2)
+  quantity     Int      @default(1)
+  regionId     Int      @map("region_id")
+  provinceId   Int      @map("province_id")
+  categoryId   Int      @map("category_id")
+  departmentId Int      @map("department_id")
+
+  region     Region     @relation(fields: [regionId], references: [id])
+  province   Province   @relation(fields: [provinceId], references: [id])
+  category   Category   @relation(fields: [categoryId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id])
+
+  @@index([orderDate])
+  @@index([regionId])
+  @@index([categoryId])
+  @@index([provinceId])
+  @@map("kernel404_transactions")
+}
+
+model Target {
+  id       Int     @id @default(autoincrement())
+  year     Int
+  month    Int // 1–12
+  regionId Int?    @map("region_id") // null = toàn quốc
+  revenue  Decimal @db.Decimal(15, 2)
+
+  region Region? @relation(fields: [regionId], references: [id])
+
+  @@unique([year, month, regionId])
+  @@map("targets")
+}
+
+// ════════════════════════════════════════
+// GROUP 4: SYSTEM
+// ════════════════════════════════════════
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String
+  body      String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  type      String   @default("INFO") // 'INFO', 'WARNING', 'ALERT'
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model DashboardSetting {
+  id           Int    @id @default(autoincrement())
+  userId       Int    @unique @map("user_id")
+  layoutConfig Json   @map("layout_config")
+  theme        String @default("dark")
+  currency     String @default("VND")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_settings")
 }

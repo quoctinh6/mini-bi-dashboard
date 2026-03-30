@@ -272,8 +272,8 @@ function WidgetPicker({
 
   return (
     <div
-      className="fixed bottom-24 right-6 z-[60] w-[360px] max-h-[75vh] bg-[#0d1120] border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden flex flex-col"
-      style={{ animation: 'slideUp 0.25s ease-out' }}
+      className="fixed bottom-24 right-6 z-[60] w-[360px] h-[550px] bg-[#0d1120] border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/80 flex flex-col origin-bottom-right"
+      style={{ animation: 'pickerPopup 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}
     >
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/40 bg-slate-900/50">
@@ -286,7 +286,7 @@ function WidgetPicker({
         </button>
       </div>
 
-      <div className="overflow-y-auto flex-1">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col custom-scrollbar">
         {/* ── Bảng đã lưu ── */}
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-center justify-between mb-2">
@@ -379,7 +379,7 @@ function WidgetPicker({
         </div>
 
         {/* ── Draggable Widget Templates ── */}
-        <div className="px-4 pb-4 grid grid-cols-2 gap-2">
+        <div key={activeCategory} className="px-4 pb-4 grid grid-cols-2 gap-2 animate-category-switch">
           {filtered.map((template) => (
             <div
               key={template.component + template.label}
@@ -418,9 +418,30 @@ function WidgetPicker({
 
       {/* CSS Animation */}
       <style>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+        @keyframes pickerPopup {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes categorySwitch {
+          from { opacity: 0; transform: translateX(15px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .animate-category-switch {
+          animation: categorySwitch 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(148, 163, 184, 0.2);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(148, 163, 184, 0.4);
         }
       `}</style>
     </div>

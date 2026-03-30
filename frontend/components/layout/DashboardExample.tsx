@@ -8,6 +8,15 @@ import { DonutChart } from '@/components/charts/DonutChart';
 import { GaugeChart } from '@/components/charts/GaugeChart';
 import { DataTable } from '@/components/data/DataTable';
 import { DataManagementLayout } from './DataManagementLayout';
+import { PermissionsSettings } from './PermissionsSettings';
+import { useAuth } from '@/lib/AuthContext';
+import { AlertTriangle } from 'lucide-react';
+
+const topEmployeesData = [
+  { id: '#NV001', date: 'Nguyễn Văn A', performance: 'Cao' as const, topic: '120% KPI' },
+  { id: '#NV002', date: 'Lê Thị B', performance: 'Cao' as const, topic: '105% KPI' },
+  { id: '#NV003', date: 'Trần Văn C', performance: 'Cao' as const, topic: '98% KPI' },
+];
 
 // ════════════════════════════════════════════════════
 // Widget Registry
@@ -217,6 +226,7 @@ const defaultWidgets: WidgetConfig[] = [
 // DashboardExample
 // ════════════════════════════════════════════════════
 export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = React.useState('dashboard');
 
   const handleLayoutChange = React.useCallback((updatedWidgets: WidgetConfig[]) => {
@@ -224,6 +234,23 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
       id: w.i, x: w.x, y: w.y, w: w.w, h: w.h
     })));
   }, []);
+
+  const isManager = currentUser?.role === 'manager';
+  
+  // RLS Widget Filtering
+  const displayWidgets = React.useMemo(() => {
+    return defaultWidgets.map(widget => {
+      // If it's the gauge chart and user is manager, change it to DataTable for top employees
+      if (widget.i === 'gauge-chart' && isManager) {
+        return {
+          ...widget,
+          component: 'DataTable',
+          props: { data: topEmployeesData, title: 'Top nhân viên xuất sắc nhất Miền' }
+        };
+      }
+      return widget;
+    });
+  }, [isManager]);
 
   return (
     <div className="flex h-screen w-full bg-[#0f121b] text-slate-200 overflow-hidden font-sans">
@@ -237,10 +264,12 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
       
       {activeTab === 'dashboard' && (
         <div className="flex-1 flex flex-col overflow-y-auto w-full">
-          <Header title="Tổng quan Doanh nghiệp" subtitle="Cập nhật lúc: 3:17:35 PM" />
-          <main className="flex-1 p-8 pt-4 pb-12 mx-auto w-full" style={{ maxWidth: 1100 }}>
+          <div className="px-8 pt-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/50 pb-4">
+            <Header title="Tổng quan Doanh nghiệp" subtitle="Cập nhật lúc: 3:17:35 PM" className="p-0 w-auto" />
+          </div>
+          <main className="flex-1 p-8 pt-6 pb-12 mx-auto w-full" style={{ maxWidth: 1100 }}>
             <DashboardGrid
-              widgets={defaultWidgets}
+              widgets={displayWidgets}
               registry={widgetRegistry}
               widgetTemplates={widgetTemplates}
               onLayoutChange={handleLayoutChange}
@@ -252,6 +281,12 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
       {activeTab === 'data_entry' && (
          <div className="flex-1 w-full h-full relative z-0 bg-[#0A1128]">
            <DataManagementLayout hideSidebar={true} />
+         </div>
+      )}
+
+      {activeTab === 'permissions' && (
+         <div className="flex-1 w-full h-full relative z-0 bg-[#0A1128] overflow-hidden">
+           <PermissionsSettings />
          </div>
       )}
 

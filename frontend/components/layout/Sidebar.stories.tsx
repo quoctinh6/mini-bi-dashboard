@@ -1,5 +1,7 @@
+import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Sidebar } from './Sidebar';
+import { AuthProvider } from '@/lib/AuthContext';
 
 const meta = {
   title: 'Layout/Sidebar',
@@ -14,6 +16,13 @@ const meta = {
     }
   },
   tags: ['autodocs'],
+  decorators: [
+    (Story) => (
+      <AuthProvider>
+        <Story />
+      </AuthProvider>
+    ),
+  ],
 } satisfies Meta<typeof Sidebar>;
 
 export default meta;

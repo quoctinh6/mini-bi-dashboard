@@ -1,11 +1,11 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { DashboardExample } from './DashboardExample';
+import { Forbidden403Page } from './Forbidden403Page';
 import { AuthProvider } from '@/lib/AuthContext';
 
 const meta = {
-  title: 'Pages/Dashboard',
-  component: DashboardExample,
+  title: 'Pages/Error 403',
+  component: Forbidden403Page,
   parameters: {
     layout: 'fullscreen',
   },
@@ -16,9 +16,13 @@ const meta = {
       </AuthProvider>
     ),
   ],
-} satisfies Meta<typeof DashboardExample>;
+} satisfies Meta<typeof Forbidden403Page>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Complete: Story = {};
+export const Default: Story = {
+  args: {
+    onGoHome: () => console.log('Go Home clicked'),
+  },
+};

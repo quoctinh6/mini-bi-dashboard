@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const uploadRoutes = require('./routes/uploadRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
-const manualEntryRoutes = require('./routes/manualEntryRoutes');
+const uploadRoutes     = require('./routes/uploadRoutes');
+const analyticsRoutes  = require('./routes/analyticsRoutes');
+const manualEntryRoutes= require('./routes/manualEntryRoutes');
+const dashboardRoutes  = require('./routes/dashboardRoutes');
 const { initCronJobs } = require('./cron/reportCron');
 const { initIngestionCron } = require('./cron/ingestionCron');
 
@@ -14,9 +15,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Mount routes
-app.use('/api/data', uploadRoutes);
-app.use('/api/data', manualEntryRoutes);
+app.use('/api/data',      uploadRoutes);
+app.use('/api/data',      manualEntryRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Khởi tạo Cron Jobs
 initCronJobs();

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { Search, Home, Database, Shield, Settings, ChevronRight, ChevronLeft, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Search, Home, Database, Shield, Settings, ChevronRight, ChevronLeft, LogOut, ShieldCheck } from 'lucide-react';
+import { useAuth, UserRole } from '@/lib/AuthContext';
 
 interface NavItemProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: React.ReactNode;
@@ -39,6 +40,14 @@ export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function Sidebar({ className, activeTab = 'dashboard', onTabChange, ...props }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const { currentUser, logout } = useAuth();
+
+  const ROLE_LABELS: Record<string, string> = {
+    director: 'Giám đốc',
+    manager: 'Trưởng phòng',
+    employee: 'Nhân viên',
+    admin: 'Quản trị viên'
+  };
 
   return (
     <div
@@ -107,6 +116,15 @@ export function Sidebar({ className, activeTab = 'dashboard', onTabChange, ...pr
         ) : (
           <div className="mt-8 mb-2 border-t border-slate-800 w-full" />
         )}
+        
+        <NavItem 
+          icon={<ShieldCheck className="h-4 w-4" />} 
+          label="Phân quyền & RLS" 
+          active={activeTab === 'permissions'}
+          onClick={() => onTabChange?.('permissions')}
+          isCollapsed={isCollapsed} 
+        />
+        
         <NavItem 
           icon={<Settings className="h-4 w-4" />} 
           label="Cài đặt" 
@@ -118,22 +136,32 @@ export function Sidebar({ className, activeTab = 'dashboard', onTabChange, ...pr
 
       {/* User Profile */}
       <div className={cn(
-        "flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/20 p-3 mt-auto w-full transition-all",
+        "flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/20 p-3 mt-auto w-full transition-all group/profile",
         isCollapsed ? "p-1.5 justify-center border-none bg-transparent" : "p-3"
       )}>
         <div className="h-9 w-9 overflow-hidden rounded-full bg-fuchsia-200 shrink-0">
             {/* Fallback avatar */}
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-fuchsia-600 to-purple-400 text-xs font-bold text-white">
-                UR
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-fuchsia-600 to-purple-400 text-xs font-bold text-white shadow-inner">
+                {currentUser?.avatar || 'UR'}
             </div>
         </div>
         {!isCollapsed && (
           <>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-slate-200 truncate">User Role</span>
-              <span className="text-xs text-slate-500">Admin</span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-semibold text-slate-200 truncate pr-2" title={currentUser?.name || 'User Role'}>
+                {currentUser?.name || 'User Role'}
+              </span>
+              <span className="text-[11px] text-fuchsia-400/80 uppercase font-medium mt-0.5">
+                {currentUser ? ROLE_LABELS[currentUser.role] : 'Admin'}
+              </span>
             </div>
-            <ChevronRight className="ml-auto h-4 w-4 text-slate-500 shrink-0" />
+            <button 
+                onClick={logout}
+                title="Đăng xuất"
+                className="ml-auto p-1.5 rounded-md text-slate-500 hover:text-white hover:bg-rose-500/20 hover:text-rose-400 transition-colors shrink-0"
+            >
+                <LogOut className="h-4 w-4" />
+            </button>
           </>
         )}
       </div>
