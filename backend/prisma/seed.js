@@ -42,20 +42,19 @@ async function main() {
   // ── Provinces — 34 tỉnh/thành phố trực thuộc TW (sau sáp nhập 2025) ──
   const provinceSeed = [
 
-    // ═══ MIỀN BẮC — 13 đơn vị ═════════════════════════════════
-    { code: 'HN',    name: 'Hà Nội',          regionId: north.id },  // gộp Vĩnh Phúc + Hòa Bình
-    { code: 'HP',    name: 'Hải Phòng',        regionId: north.id },  // gộp Hải Dương
-    { code: 'QNINH', name: 'Quảng Ninh',       regionId: north.id },
-    { code: 'LCI',   name: 'Lào Cai',          regionId: north.id },  // gộp Yên Bái
-    { code: 'HG',    name: 'Hà Giang',         regionId: north.id },  // gộp Tuyên Quang
-    { code: 'CB',    name: 'Cao Bằng',         regionId: north.id },  // gộp Bắc Kạn
-    { code: 'TNG',   name: 'Thái Nguyên',      regionId: north.id },  // gộp Bắc Giang + Bắc Ninh
-    { code: 'SLA',   name: 'Sơn La',           regionId: north.id },  // gộp Điện Biên + Lai Châu
-    { code: 'PT',    name: 'Phú Thọ',          regionId: north.id },
-    { code: 'TB',    name: 'Thái Bình',        regionId: north.id },  // gộp Hưng Yên + Nam Định
-    { code: 'HNM',   name: 'Hà Nam',           regionId: north.id },  // gộp Ninh Bình
-    { code: 'TH',    name: 'Thanh Hóa',        regionId: north.id },
-    { code: 'NBAC',  name: 'Ninh Bắc',         regionId: north.id },  // Hưng Yên (đã gộp riêng)
+    // ═══ MIỀN BẮC — 12 đơn vị ═════════════════════════════════
+    { code: 'HN',    name: 'Hà Nội',     regionId: north.id }, // gộp Vĩnh Phúc + Hòa Bình
+    { code: 'HP',    name: 'Hải Phòng',  regionId: north.id }, // gộp Hải Dương
+    { code: 'QNINH', name: 'Quảng Ninh', regionId: north.id },
+    { code: 'LCI',   name: 'Lào Cai',    regionId: north.id }, // gộp Yên Bái
+    { code: 'HG',    name: 'Hà Giang',   regionId: north.id }, // gộp Tuyên Quang
+    { code: 'CB',    name: 'Cao Bằng',   regionId: north.id }, // gộp Bắc Kạn
+    { code: 'TNG',   name: 'Thái Nguyên',regionId: north.id }, // gộp Bắc Giang + Bắc Ninh
+    { code: 'SLA',   name: 'Sơn La',     regionId: north.id }, // gộp Điện Biên + Lai Châu
+    { code: 'PT',    name: 'Phú Thọ',    regionId: north.id },
+    { code: 'TB',    name: 'Thái Bình',  regionId: north.id }, // gộp Hưng Yên + Nam Định
+    { code: 'HNM',   name: 'Hà Nam',     regionId: north.id }, // gộp Ninh Bình
+    { code: 'TH',    name: 'Thanh Hóa',  regionId: north.id },
 
     // ═══ MIỀN TRUNG — 11 đơn vị ════════════════════════════════
     { code: 'NAN',   name: 'Nghệ An',          regionId: central.id }, // gộp Hà Tĩnh
@@ -70,17 +69,18 @@ async function main() {
     { code: 'LDG',   name: 'Lâm Đồng',        regionId: central.id }, // gộp Bình Phước
     { code: 'BTHUAN',name: 'Bình Thuận',       regionId: central.id },
 
-    // ═══ MIỀN NAM — 10 đơn vị ══════════════════════════════════
-    { code: 'HCM',   name: 'TP. Hồ Chí Minh', regionId: south.id },  // gộp Bình Dương + Bà Rịa–VT
-    { code: 'DNAI',  name: 'Đồng Nai',         regionId: south.id },  // gộp Tây Ninh
-    { code: 'LAN',   name: 'Long An',          regionId: south.id },  // gộp Tiền Giang
-    { code: 'DTHAP', name: 'Đồng Tháp',        regionId: south.id },  // gộp An Giang
-    { code: 'BTE',   name: 'Bến Tre',          regionId: south.id },  // gộp Trà Vinh
-    { code: 'VLG',   name: 'Vĩnh Long',        regionId: south.id },  // gộp Hậu Giang
-    { code: 'CTHO',  name: 'Cần Thơ',          regionId: south.id },  // gộp Sóc Trăng
-    { code: 'KGG',   name: 'Kiên Giang',       regionId: south.id },  // gộp Cà Mau + Bạc Liêu
-    { code: 'BDUONG',name: 'Bình Dương (mở rộng)', regionId: south.id }, // đã tích hợp vào HCM nhưng giữ để map
-    { code: 'BRVT',  name: 'Bà Rịa – Vũng Tàu', regionId: south.id },
+    // ═══ MIỀN NAM — 11 đơn vị ══════════════════════════════════
+    { code: 'HCM',   name: 'TP. Hồ Chí Minh',  regionId: south.id }, // gộp Bình Dương + Bà Rịa–VT
+    { code: 'DNAI',  name: 'Đồng Nai',          regionId: south.id }, // gộp Tây Ninh
+    { code: 'BPHUOC',name: 'Bình Phước',         regionId: south.id },
+    { code: 'LAN',   name: 'Long An',           regionId: south.id },
+    { code: 'TGIANG',name: 'Tiền Giang',         regionId: south.id },
+    { code: 'DTHAP', name: 'Đồng Tháp',         regionId: south.id }, // gộp An Giang
+    { code: 'BTE',   name: 'Bến Tre',           regionId: south.id }, // gộp Trà Vinh
+    { code: 'VLG',   name: 'Vĩnh Long',         regionId: south.id }, // gộp Hậu Giang
+    { code: 'CTHO',  name: 'Cần Thơ',           regionId: south.id }, // gộp Sóc Trăng
+    { code: 'KGG',   name: 'Kiên Giang',        regionId: south.id }, // gộp Cà Mau + Bạc Liêu
+    { code: 'BRVT',  name: 'Bà Rịa – Vũng Tàu',regionId: south.id },
   ];
 
   console.log(`   → ${provinceSeed.length} provinces prepared`);

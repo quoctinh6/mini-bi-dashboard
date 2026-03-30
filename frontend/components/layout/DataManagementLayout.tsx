@@ -1,16 +1,42 @@
+"use client";
 import * as React from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Download, Plus, Bell } from 'lucide-react';
+import { Download, Plus, Bell, Loader2 } from 'lucide-react';
 import { DataManagementTable, DataRecord } from '@/components/data/DataManagementTable';
-
-const mockData: DataRecord[] = [
-  { id: '1', date: '2023-01-15', category: 'Thiết bị', region: 'Miền Bắc', revenue: '$4,500', cost: '$3,000' },
-  { id: '2', date: '2023-01-15', category: 'Dịch vụ', region: 'Miền Trung', revenue: '$4,500', cost: '$3,000' },
-  { id: '3', date: '2023-01-15', category: 'Phần mềm', region: 'Miền Nam', revenue: '$4,500', cost: '$3,000' },
-  { id: '4', date: '2023-01-15', category: 'Thiết bị', region: 'Miền Bắc', revenue: '$4,500', cost: '$3,000' },
-];
+import { dataServices } from '@/services/apiService';
 
 export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean }) {
+  const [records, setRecords] = React.useState<DataRecord[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setIsLoading(true);
+        const response = await dataServices.getTransactions({ limit: 50 });
+        if (response.success) {
+          const mapped: DataRecord[] = response.data.map((t: any) => ({
+            id: t.id.toString(),
+            date: new Date(t.orderDate).toLocaleDateString(),
+            category: t.category.name,
+            region: t.region.name,
+            revenue: t.revenue.toLocaleString() + ' ₫',
+            cost: t.cost.toLocaleString() + ' ₫'
+          }));
+          setRecords(mapped);
+          setTotal(response.meta.total);
+        }
+      } catch (error) {
+        console.error('Failed to fetch transactions', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0A1128] text-slate-200 font-sans">
       {/* Sidebar Overlay/Mock */}
@@ -21,7 +47,7 @@ export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean })
         <header className="flex h-[100px] shrink-0 items-center justify-between px-10 bg-transparent">
           <div className="flex flex-col justify-center">
             <h1 className="text-[26px] font-semibold text-white tracking-tight leading-loose">Quản lí dữ liệu</h1>
-            <p className="text-[13px] font-normal text-slate-400">Cập nhật lúc: 5:04:31 PM</p>
+            <p className="text-[13px] font-normal text-slate-400">Cập nhật lúc: {new Date().toLocaleTimeString()}</p>
           </div>
           
           <div className="flex items-center space-x-6">
@@ -55,10 +81,16 @@ export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean })
           
           {/* Data Table Container */}
           <div className="flex-1 flex flex-col min-h-[400px]">
-             {/* Using a wrapping div to align exact table bounds */}
-             <div className="w-full relative">
-                <DataManagementTable data={mockData} totalItems={256} className="bg-[#0D1530] border-[#1C2541]" />
-             </div>
+             {isLoading ? (
+               <div className="flex h-64 w-full items-center justify-center">
+                 <Loader2 className="h-8 w-8 animate-spin text-fuchsia-500" />
+                 <span className="ml-3 text-slate-400">Đang tải lịch sử giao dịch...</span>
+               </div>
+             ) : (
+               <div className="w-full relative">
+                  <DataManagementTable data={records} totalItems={total} className="bg-[#0D1530] border-[#1C2541]" />
+               </div>
+             )}
           </div>
         </main>
       </div>

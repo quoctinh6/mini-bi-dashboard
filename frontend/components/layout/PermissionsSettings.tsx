@@ -1,90 +1,34 @@
+"use client";
 import React, { useState, useMemo } from 'react';
-import { useAuth, UserRole, RegionScope } from '@/lib/AuthContext';
-import { ShieldCheck, Eye, Search, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuth, UserRole } from '@/lib/AuthContext';
+import { ShieldCheck, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  director: 'Giám đốc',
-  manager: 'Trưởng phòng',
-  employee: 'Nhân viên'
-};
-
-const REGION_LABELS: Record<RegionScope, string> = {
-  national: 'Toàn quốc',
-  north: 'Miền Bắc',
-  central: 'Miền Trung',
-  south: 'Miền Nam'
+  DIRECTOR: 'Giám đốc',
+  MANAGER: 'Trưởng phòng',
+  EMPLOYEE: 'Nhân viên',
+  ADMIN: 'Quản trị viên'
 };
 
 export function PermissionsSettings() {
-  const { allUsers, updateUserRole, impersonate, currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Track users that need their scope updated (changed to manager without a specific region)
-  const [needsScopeUpdate, setNeedsScopeUpdate] = useState<Set<string>>(new Set());
-
-  const handleRoleChange = (userId: string, newRole: UserRole, currentScope: RegionScope[]) => {
-    let newScope = currentScope;
-    
-    // Auto-adjust scope logic
-    if (newRole === 'director' && !currentScope.includes('national')) {
-      newScope = ['national'];
-      
-      // Remove from needs update if they were in it
-      setNeedsScopeUpdate(prev => {
-        const next = new Set(prev);
-        next.delete(userId);
-        return next;
-      });
-    } else if (newRole === 'manager') {
-      if (currentScope.includes('national') || currentScope.length === 0) {
-        // If changing to manager but they have 'national' or no scope, warn them and clear 'national'
-        newScope = currentScope.filter(s => s !== 'national');
-        
-        // Add to needs update alert
-        setNeedsScopeUpdate(prev => new Set(prev).add(userId));
-      }
-    }
-    
-    updateUserRole(userId, newRole, newScope);
-  };
-
-  const handleScopeChange = (userId: string, scope: RegionScope, userRole: UserRole, currentScope: RegionScope[]) => {
-    let newScope = [...currentScope];
-    
-    if (scope === 'national') {
-      newScope = ['national'];
-    } else {
-      newScope = newScope.filter(s => s !== 'national');
-      if (newScope.includes(scope)) {
-        newScope = newScope.filter(s => s !== scope);
-      } else {
-        newScope.push(scope);
-      }
-    }
-    
-    // Clear the alert if they finally selected at least one region
-    if (newScope.length > 0 && needsScopeUpdate.has(userId)) {
-      setNeedsScopeUpdate(prev => {
-        const next = new Set(prev);
-        next.delete(userId);
-        return next;
-      });
-    }
-    
-    updateUserRole(userId, userRole, newScope);
-  };
+  // Mocking users for now as backend doesn't have list users API yet
+  const allUsers = useMemo(() => [
+    { id: 1, fullName: 'Admin User', username: 'admin', role: 'ADMIN' as UserRole, avatar: 'AU' },
+    { id: 2, fullName: 'Manager User', username: 'manager', role: 'MANAGER' as UserRole, avatar: 'MU' },
+  ], []);
 
   // --- Pagination Logic ---
   const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset page when filtering
   const filteredUsers = useMemo(() => {
-    setCurrentPage(1);
     return allUsers.filter(u => 
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.username.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [allUsers, searchTerm]);
 
@@ -122,20 +66,17 @@ export function PermissionsSettings() {
                <tr className="border-b border-slate-800 bg-slate-900/50">
                   <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tài khoản</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Vai trò (Role)</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Phạm vi dữ liệu (RLS Scope)</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Trạng thái</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Thao tác</th>
                </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
                {currentUsers.length === 0 ? (
                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-500">
+                    <td colSpan={3} className="py-8 text-center text-slate-500">
                       Không tìm thấy dữ liệu phù hợp.
                     </td>
                  </tr>
                ) : currentUsers.map(user => {
-                 const isPulsing = needsScopeUpdate.has(user.id);
                  const isMe = currentUser?.id === user.id;
 
                  return (
@@ -147,10 +88,10 @@ export function PermissionsSettings() {
                             </div>
                             <div>
                                <div className="font-medium text-slate-200">
-                                 {user.name}
+                                 {user.fullName}
                                  {isMe && <span className="ml-2 text-[10px] uppercase bg-fuchsia-500/20 text-fuchsia-400 px-2 py-0.5 rounded-full ring-1 ring-fuchsia-500/30">Bạn</span>}
                                </div>
-                               <div className="text-xs text-slate-500 mt-0.5">{user.email}</div>
+                               <div className="text-xs text-slate-500 mt-0.5">{user.username}</div>
                             </div>
                          </div>
                       </td>
@@ -159,7 +100,6 @@ export function PermissionsSettings() {
                          <select 
                             disabled={isMe}
                             value={user.role}
-                            onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole, user.dataScope)}
                             className="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-fuchsia-500 disabled:opacity-50"
                          >
                             {Object.entries(ROLE_LABELS).map(([key, label]) => (
@@ -169,58 +109,10 @@ export function PermissionsSettings() {
                       </td>
                       
                       <td className="px-6 py-4">
-                         <div className={cn(
-                            "flex flex-wrap gap-2 p-1.5 rounded-lg border",
-                            isPulsing 
-                               ? "border-red-500/60 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)] animate-pulse" 
-                               : "border-transparent"
-                         )}>
-                            {Object.entries(REGION_LABELS).map(([scope, label]) => {
-                               const scopeTyped = scope as RegionScope;
-                               const isSelected = user.dataScope.includes(scopeTyped);
-                               return (
-                                 <button
-                                   key={scopeTyped}
-                                   disabled={user.role === 'director' || isMe}
-                                   onClick={() => handleScopeChange(user.id, scopeTyped, user.role, user.dataScope)}
-                                   className={cn(
-                                      "px-2.5 py-1 rounded-md text-xs font-medium transition-all",
-                                      isSelected
-                                         ? "bg-fuchsia-600 text-white shadow-md shadow-fuchsia-900/20"
-                                         : "bg-slate-800 text-slate-400 hover:bg-slate-700",
-                                      (user.role === 'director' || isMe) && "opacity-60 cursor-not-allowed"
-                                   )}
-                                 >
-                                   {label}
-                                 </button>
-                               );
-                            })}
-                            
-                            {isPulsing && (
-                               <div className="flex items-center text-xs text-red-400 ml-1">
-                                  <AlertCircle className="h-3.5 w-3.5 mr-1" />
-                                  Vui lòng chọn khu vực!
-                               </div>
-                            )}
-                         </div>
-                      </td>
-                      
-                      <td className="px-6 py-4">
                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                             Hoạt động
                          </span>
-                      </td>
-                      
-                      <td className="px-6 py-4 text-right">
-                         <button 
-                            disabled={isMe}
-                            onClick={() => impersonate(user)}
-                            title={`Xem trang Dashboard với quyền của ${user.name}`}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-fuchsia-600 transition-colors disabled:opacity-30 disabled:hover:bg-slate-800 disabled:hover:text-slate-400"
-                         >
-                            <Eye className="h-4 w-4" />
-                         </button>
                       </td>
                    </tr>
                  );
@@ -228,7 +120,7 @@ export function PermissionsSettings() {
             </tbody>
          </table>
 
-         {/* Pagination Header / Footer */}
+         {/* Pagination Footer */}
          <div className="flex items-center justify-between px-6 py-4 bg-slate-900/40 border-t border-slate-800">
             <div className="text-xs text-slate-500">
               Hiển thị <span className="font-semibold text-slate-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> - <span className="font-semibold text-slate-300">{Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)}</span> trên tổng số <span className="font-semibold text-slate-300">{filteredUsers.length}</span> tài khoản

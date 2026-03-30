@@ -116,18 +116,36 @@ async function getDashboardOverview(jwtUser, params = {}) {
     }),
 
     // Revenue grouped by month (for bar/line chart)
-    prisma.$queryRawUnsafe(`
-      SELECT
-        DATE_FORMAT(order_date, '%Y-%m') AS month,
-        SUM(revenue)                     AS revenue,
-        SUM(cost)                        AS cost
-      FROM kernel404_transactions
-      WHERE order_date >= ? AND order_date <= ?
-        ${rlsWhere.regionId ? `AND region_id IN (${rlsWhere.regionId.in.join(',')})` : ''}
-        ${regionFilter.regionId ? `AND region_id = ${regionFilter.regionId}` : ''}
-      GROUP BY month
-      ORDER BY month ASC
-    `, dateFilter.gte, dateFilter.lte),
+    // Revenue grouped by month (for bar/line chart) - Safely handle RLS and region filters
+    (() => {
+      let rlsClause = '';
+      if (rlsWhere.regionId) {
+        const ids = rlsWhere.regionId.in;
+        rlsClause = ids.length > 0 ? `AND region_id IN (${ids.join(',')})` : 'AND 1=0';
+      }
+
+      let extraFilter = '';
+      if (regionFilter.regionId) {
+        extraFilter = `AND region_id = ${regionFilter.regionId}`;
+      }
+
+      // Convert dates to ISO strings for MySQL safety in raw queries
+      const startStr = dateFilter.gte.toISOString().slice(0, 19).replace('T', ' ');
+      const endStr   = dateFilter.lte.toISOString().slice(0, 19).replace('T', ' ');
+
+      return prisma.$queryRawUnsafe(`
+        SELECT
+          DATE_FORMAT(order_date, '%Y-%m') AS month,
+          SUM(revenue)                     AS revenue,
+          SUM(cost)                        AS cost
+        FROM kernel404_transactions
+        WHERE order_date >= ? AND order_date <= ?
+          ${rlsClause}
+          ${extraFilter}
+        GROUP BY month
+        ORDER BY month ASC
+      `, startStr, endStr);
+    })(),
 
     // Revenue grouped by Category (for Donut chart)
     prisma.kernel404.groupBy({

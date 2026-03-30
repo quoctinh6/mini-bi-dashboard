@@ -9,9 +9,7 @@ const api = axios.create({
     }
 });
 
-// Thêm interceptor để nhúng JWT token tự động vào header (hỗ trợ RLS)
 api.interceptors.request.use((config) => {
-    // Trong môi trường ứng dụng thật, lấy token từ localStorage hoặc Cookies
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -21,22 +19,48 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
+export const authServices = {
+    login: async (username: string, password: string) => {
+        const response = await api.post('/auth/login', { username, password });
+        return response.data;
+    }
+};
+
+export const masterDataServices = {
+    getProvinces:   () => api.get('/master/provinces').then(res => res.data),
+    getCategories:  () => api.get('/master/categories').then(res => res.data),
+    getDepartments: () => api.get('/master/departments').then(res => res.data),
+    getRegions:     () => api.get('/master/regions').then(res => res.data),
+};
+
+export const dashboardServices = {
+    getOverview: async (params = {}) => {
+        const response = await api.get('/dashboard/overview', { params });
+        return response.data;
+    }
+};
+
 export const analyticsServices = {
-    // Fetch metrics (Revenue, Growth Rate)
-    getMetrics: async () => {
-        const response = await api.get('/analytics/metrics');
+    getMetrics: async (params = {}) => {
+        const response = await api.get('/analytics/metrics', { params });
         return response.data;
     },
-    
-    // Fetch sales grouped data (for charts)
-    getSales: async (params) => {
-        // params chứa: groupBy ('Date', 'Province', 'Department'), startDate, endDate, department
+    getSales: async (params = {}) => {
         const response = await api.get('/analytics/sales', { params });
         return response.data;
-    },
+    }
+};
 
-    // Upload Data API
-    uploadData: async (file) => {
+export const dataServices = {
+    getTransactions: async (params = {}) => {
+        const response = await api.get('/data/transactions', { params });
+        return response.data;
+    },
+    createManualEntry: async (data: any) => {
+        const response = await api.post('/data/manual', data);
+        return response.data;
+    },
+    uploadData: async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
         const response = await api.post('/data/upload', formData, {

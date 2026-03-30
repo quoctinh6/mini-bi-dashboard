@@ -1,7 +1,8 @@
+"use client";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Search, Home, Database, Shield, Settings, ChevronRight, ChevronLeft, LogOut, ShieldCheck } from 'lucide-react';
-import { useAuth, UserRole } from '@/lib/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 
 interface NavItemProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: React.ReactNode;
@@ -43,10 +44,10 @@ export function Sidebar({ className, activeTab = 'dashboard', onTabChange, ...pr
   const { currentUser, logout } = useAuth();
 
   const ROLE_LABELS: Record<string, string> = {
-    director: 'Giám đốc',
-    manager: 'Trưởng phòng',
-    employee: 'Nhân viên',
-    admin: 'Quản trị viên'
+    DIRECTOR: 'Giám đốc',
+    MANAGER: 'Trưởng phòng',
+    EMPLOYEE: 'Nhân viên',
+    ADMIN: 'Quản trị viên'
   };
 
   return (
@@ -148,8 +149,8 @@ export function Sidebar({ className, activeTab = 'dashboard', onTabChange, ...pr
         {!isCollapsed && (
           <>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-semibold text-slate-200 truncate pr-2" title={currentUser?.name || 'User Role'}>
-                {currentUser?.name || 'User Role'}
+              <span className="text-sm font-semibold text-slate-200 truncate pr-2" title={currentUser?.fullName || 'User Role'}>
+                {currentUser?.fullName || 'User Role'}
               </span>
               <span className="text-[11px] text-fuchsia-400/80 uppercase font-medium mt-0.5">
                 {currentUser ? ROLE_LABELS[currentUser.role] : 'Admin'}

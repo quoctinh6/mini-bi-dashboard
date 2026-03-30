@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const authRoutes       = require('./routes/authRoutes');
+const masterDataRoutes = require('./routes/masterDataRoutes');
 const uploadRoutes     = require('./routes/uploadRoutes');
 const analyticsRoutes  = require('./routes/analyticsRoutes');
 const manualEntryRoutes= require('./routes/manualEntryRoutes');
@@ -15,6 +17,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Mount routes
+app.use('/api/auth',      authRoutes);
+app.use('/api/master',    masterDataRoutes);
 app.use('/api/data',      uploadRoutes);
 app.use('/api/data',      manualEntryRoutes);
 app.use('/api/analytics', analyticsRoutes);

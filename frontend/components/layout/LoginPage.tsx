@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -17,9 +18,14 @@ export function LoginPage() {
     setStatusText('Đang tải không gian làm việc của bạn...');
     
     // Simulate loading RLS data
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 1000));
     
-    await login(email);
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setIsLoading(false);
+      alert(err.message || 'Đăng nhập thất bại');
+    }
   };
 
   return (

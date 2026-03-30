@@ -1,3 +1,4 @@
+"use client";
 import * as React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -10,7 +11,9 @@ import { DataTable } from '@/components/data/DataTable';
 import { DataManagementLayout } from './DataManagementLayout';
 import { PermissionsSettings } from './PermissionsSettings';
 import { useAuth } from '@/lib/AuthContext';
-import { AlertTriangle } from 'lucide-react';
+import { dashboardServices } from '@/services/apiService';
+import { cn } from '@/lib/utils';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 const topEmployeesData = [
   { id: '#NV001', date: 'Nguyễn Văn A', performance: 'Cao' as const, topic: '120% KPI' },
@@ -30,227 +33,149 @@ const widgetRegistry: WidgetRegistry = {
 };
 
 // ════════════════════════════════════════════════════
-// Widget Templates — kéo thả từ picker
-// ════════════════════════════════════════════════════
-const widgetTemplates: WidgetTemplate[] = [
-  {
-    component: 'KPICard',
-    label: 'Thẻ KPI',
-    description: 'Chỉ số KPI với xu hướng tăng/giảm',
-    category: 'kpi',
-    defaultW: 2, defaultH: 1,
-    minW: 2, minH: 1, maxW: 4, maxH: 2,
-    defaultProps: {
-      title: 'Chỉ số mới',
-      value: '$0',
-      trend: 0,
-      trendDirection: 'up',
-    },
-  },
-  {
-    component: 'MixedChart',
-    label: 'Biểu đồ hỗn hợp',
-    description: 'Biểu đồ cột + đường — thực tế vs kế hoạch',
-    category: 'chart',
-    defaultW: 6, defaultH: 3,
-    minW: 4, minH: 2, maxW: 8, maxH: 5,
-    defaultProps: {
-      data: [
-        { month: 'T1', actual: 2000, target: 3000 },
-        { month: 'T2', actual: 3500, target: 3200 },
-        { month: 'T3', actual: 4200, target: 4000 },
-        { month: 'T4', actual: 5100, target: 4800 },
-        { month: 'T5', actual: 4800, target: 5500 },
-        { month: 'T6', actual: 6200, target: 6000 },
-      ],
-      title: 'Biểu đồ mới',
-      totalValue: '$0',
-      trend: 0,
-    },
-  },
-  {
-    component: 'DonutChart',
-    label: 'Biểu đồ Donut',
-    description: 'Biểu đồ tròn — tỷ lệ phân bổ',
-    category: 'chart',
-    defaultW: 2, defaultH: 3,
-    minW: 2, minH: 2, maxW: 4, maxH: 6,
-    defaultProps: {
-      data: [
-        { label: 'Mục A', value: 40 },
-        { label: 'Mục B', value: 30 },
-        { label: 'Mục C', value: 20 },
-        { label: 'Mục D', value: 10 },
-      ],
-      title: 'Donut mới',
-      totalValue: '100',
-      size: 130,
-      top: 3,
-    },
-  },
-  {
-    component: 'GaugeChart',
-    label: 'Biểu đồ Gauge',
-    description: 'Bán nguyệt — phân bổ khu vực',
-    category: 'chart',
-    defaultW: 4, defaultH: 3,
-    minW: 3, minH: 2, maxW: 6, maxH: 5,
-    defaultProps: {
-      data: [
-        { label: 'Khu vực A', value: 5000, color: '#d946ef' },
-        { label: 'Khu vực B', value: 3000, color: '#3b82f6' },
-        { label: 'Khu vực C', value: 2000, color: '#0ea5e9' },
-      ],
-      title: 'Gauge mới',
-      totalValue: '10,000',
-    },
-  },
-  {
-    component: 'DataTable',
-    label: 'Bảng dữ liệu',
-    description: 'Bảng thông báo dạng hàng',
-    category: 'data',
-    defaultW: 4, defaultH: 3,
-    minW: 3, minH: 2, maxW: 8, maxH: 6,
-    defaultProps: {
-      data: [
-        { id: '#001', date: 'Jan 1, 12:00 PM', performance: 'Cao' as const, topic: 'Mẫu' },
-        { id: '#002', date: 'Jan 2, 3:00 PM', performance: 'Thấp' as const, topic: 'Mẫu' },
-      ],
-      title: 'Bảng mới',
-    },
-  },
-];
-
-// ════════════════════════════════════════════════════
-// Default Data
-// ════════════════════════════════════════════════════
-const mixData = [
-  { month: 'Jan', actual: 1200, target: 3000 },
-  { month: 'Feb', actual: 3800, target: 2000 },
-  { month: 'Mar', actual: 4800, target: 1800 },
-  { month: 'Apr', actual: 6000, target: 4500 },
-  { month: 'May', actual: 3200, target: 6000 },
-  { month: 'Jun', actual: 7500, target: 6200 },
-  { month: 'Jul', actual: 6500, target: 5800 },
-  { month: 'Aug', actual: 9500, target: 10200 },
-  { month: 'Sep', actual: 12500, target: 11000 },
-  { month: 'Oct', actual: 8500, target: 9200 },
-  { month: 'Nov', actual: 7500, target: 6500 },
-  { month: 'Dec', actual: 6000, target: 6800 },
-];
-
-const donutData = [
-  { label: 'Thiết bị',       value: 45000 },
-  { label: 'Phần mềm',      value: 30000 },
-  { label: 'Dịch vụ',       value: 22500 },
-  { label: 'Đào tạo',       value: 15000 },
-  { label: 'Tư vấn',        value: 12000 },
-  { label: 'Bảo trì',       value: 9000  },
-  { label: 'Gia công',      value: 7500  },
-  { label: 'Bản quyền',     value: 4500  },
-  { label: 'Quảng cáo',     value: 3000  },
-  { label: 'Văn phòng phẩm', value: 1500 },
-];
-
-const gaugeData = [
-  { label: 'Miền Bắc', value: 15624, color: '#d946ef' },
-  { label: 'Miền Trung', value: 5546, color: '#3b82f6' },
-  { label: 'Miền Nam', value: 2478, color: '#0ea5e9' },
-];
-
-const tableData = [
-  { id: '#1532', date: 'Dec 30, 10:06 AM', performance: 'Cao' as const, topic: 'Phần mềm' },
-  { id: '#1531', date: 'Dec 29, 2:59 AM', performance: 'Thấp' as const, topic: 'Miền Nam' },
-  { id: '#1530', date: 'Dec 29, 12:54 AM', performance: 'Thấp' as const, topic: 'Miền Trung' },
-  { id: '#1529', date: 'Dec 28, 2:32 PM', performance: 'Cao' as const, topic: 'Thiết bị' },
-  { id: '#1528', date: 'Dec 27, 2:20 PM', performance: 'Thấp' as const, topic: 'Miền Bắc' },
-  { id: '#1527', date: 'Dec 26, 9:48 AM', performance: 'Cao' as const, topic: 'Dịch vụ' },
-];
-
-// ════════════════════════════════════════════════════
-// Default Widgets
-// ════════════════════════════════════════════════════
-const defaultWidgets: WidgetConfig[] = [
-  {
-    i: 'kpi-revenue', x: 0, y: 0, w: 2, h: 1,
-    minW: 2, minH: 1, maxW: 4, maxH: 2,
-    component: 'KPICard',
-    props: { title: 'Tổng Doanh Thu', value: '$50.800', trend: 28.4, trendDirection: 'up' },
-  },
-  {
-    i: 'kpi-cost', x: 2, y: 0, w: 2, h: 1,
-    minW: 2, minH: 1, maxW: 4, maxH: 2,
-    component: 'KPICard',
-    props: { title: 'Tổng chi phí', value: '$23.600', trend: -12.6, trendDirection: 'down' },
-  },
-  {
-    i: 'kpi-profit', x: 4, y: 0, w: 2, h: 1,
-    minW: 2, minH: 1, maxW: 4, maxH: 2,
-    component: 'KPICard',
-    props: { title: 'Lợi nhuận ròng', value: '$756', trend: 3.1, trendDirection: 'up' },
-  },
-  {
-    i: 'kpi-growth', x: 6, y: 0, w: 2, h: 1,
-    minW: 2, minH: 1, maxW: 4, maxH: 2,
-    component: 'KPICard',
-    props: { title: 'Tỉ lệ tăng trưởng', value: '2.7', trend: 11.3, trendDirection: 'up' },
-  },
-  {
-    i: 'mixed-chart', x: 0, y: 1, w: 6, h: 3,
-    minW: 4, minH: 2, maxW: 8, maxH: 5,
-    component: 'MixedChart',
-    props: { data: mixData, title: 'Doanh thu và Kế hoạch', totalValue: '$240.000', trend: 24.6 },
-  },
-  {
-    i: 'donut-chart', x: 6, y: 1, w: 2, h: 3,
-    minW: 2, minH: 2, maxW: 4, maxH: 6,
-    component: 'DonutChart',
-    props: { data: donutData, title: 'Cơ cấu ngành hàng', totalValue: '150.000', size: 130, top: 3 },
-  },
-  {
-    i: 'gauge-chart', x: 0, y: 4, w: 4, h: 3,
-    minW: 3, minH: 2, maxW: 6, maxH: 5,
-    component: 'GaugeChart',
-    props: { data: gaugeData, title: 'Phân bổ theo Địa lý', totalValue: '23,648' },
-  },
-  {
-    i: 'data-table', x: 4, y: 4, w: 4, h: 3,
-    minW: 3, minH: 2, maxW: 8, maxH: 6,
-    component: 'DataTable',
-    props: { data: tableData },
-  },
-];
-
-// ════════════════════════════════════════════════════
 // DashboardExample
 // ════════════════════════════════════════════════════
 export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = React.useState('dashboard');
+  const [widgets, setWidgets] = React.useState<WidgetConfig[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  
+  // ── Filters & Master Data ──
+  const [regions, setRegions] = React.useState<{ id: number; name: string; code: string }[]>([]);
+  const [filters, setFilters] = React.useState({
+    regionId: '',
+    period: '2025' // Default to 2025 as it's the latest data
+  });
+  const [lastUpdated, setLastUpdated] = React.useState('');
 
-  const handleLayoutChange = React.useCallback((updatedWidgets: WidgetConfig[]) => {
-    console.log('[Dashboard] Layout changed:', updatedWidgets.map(w => ({
-      id: w.i, x: w.x, y: w.y, w: w.w, h: w.h
-    })));
+  // Set initial time on client to avoid hydration mismatch
+  React.useEffect(() => {
+    setLastUpdated(new Date().toLocaleTimeString('vi-VN'));
   }, []);
 
-  const isManager = currentUser?.role === 'manager';
-  
-  // RLS Widget Filtering
-  const displayWidgets = React.useMemo(() => {
-    return defaultWidgets.map(widget => {
-      // If it's the gauge chart and user is manager, change it to DataTable for top employees
-      if (widget.i === 'gauge-chart' && isManager) {
-        return {
-          ...widget,
-          component: 'DataTable',
-          props: { data: topEmployeesData, title: 'Top nhân viên xuất sắc nhất Miền' }
-        };
+  // Fetch Master Data (Regions)
+  React.useEffect(() => {
+    // In a real app, we'd fetch actual regions from Master Data API
+    // For now, we seed with common BI regions
+    setRegions([
+      { id: 1, name: 'Miền Bắc', code: 'NORTH' },
+      { id: 2, name: 'Miền Trung', code: 'CENTRAL' },
+      { id: 3, name: 'Miền Nam', code: 'SOUTH' },
+    ]);
+  }, []);
+
+  // Fetch real aggregated data from API
+  const fetchData = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // Parse period into dates
+      let startDate = '2025-01-01';
+      let endDate = '2025-12-31';
+      if (filters.period === '2024') {
+        startDate = '2024-01-01';
+        endDate = '2024-12-31';
       }
-      return widget;
-    });
-  }, [isManager]);
+
+      const response = await dashboardServices.getOverview({
+        regionId: filters.regionId || undefined,
+        startDate,
+        endDate
+      });
+      
+      if (response.success) {
+        const { kpi, charts } = response.data;
+
+        // Map API data to widget props
+        const apiWidgets: WidgetConfig[] = [
+          {
+            i: 'kpi-revenue', x: 0, y: 0, w: 2, h: 1,
+            component: 'KPICard',
+            props: { title: 'Tổng Doanh Thu', value: kpi.totalRevenue.toLocaleString('vi-VN') + ' ₫', trend: kpi.growthRate, trendDirection: kpi.growthRate >= 0 ? 'up' : 'down' },
+          },
+          {
+            i: 'kpi-cost', x: 2, y: 0, w: 2, h: 1,
+            component: 'KPICard',
+            props: { title: 'Tổng chi phí', value: kpi.totalCost.toLocaleString('vi-VN') + ' ₫', trend: 0, trendDirection: 'neutral' },
+          },
+          {
+            i: 'kpi-profit', x: 4, y: 0, w: 2, h: 1,
+            component: 'KPICard',
+            props: { title: 'Lợi nhuận ròng', value: kpi.totalProfit.toLocaleString('vi-VN') + ' ₫', trend: 0, trendDirection: 'neutral' },
+          },
+          {
+            i: 'kpi-orders', x: 6, y: 0, w: 2, h: 1,
+            component: 'KPICard',
+            props: { title: 'Tổng số đơn', value: kpi.totalOrders.toLocaleString('vi-VN'), trend: 0, trendDirection: 'neutral' },
+          },
+          {
+            i: 'mixed-chart', x: 0, y: 1, w: 6, h: 3,
+            component: 'MixedChart',
+            props: { 
+              data: charts.revenueByMonth.map((d: any) => ({ month: d.month, actual: d.revenue, target: d.revenue * 0.9 })), 
+              title: 'Doanh thu theo tháng', 
+              totalValue: kpi.totalRevenue.toLocaleString('vi-VN') + ' ₫', 
+              trend: kpi.growthRate 
+            },
+          },
+          {
+            i: 'donut-chart', x: 6, y: 1, w: 2, h: 3,
+            component: 'DonutChart',
+            props: { 
+              data: charts.revenueByCategory.map((d: any) => ({ label: d.label, value: d.value })),
+              title: 'Cơ cấu ngành hàng', 
+              totalValue: kpi.totalRevenue.toLocaleString('vi-VN'), 
+              size: 130, 
+              top: 3 
+            },
+          },
+          {
+            i: 'gauge-chart', x: 0, y: 4, w: 4, h: 3,
+            component: 'GaugeChart',
+            props: { 
+              data: charts.revenueByRegion.map((d: any) => ({ label: d.label, value: d.revenue, color: d.code === 'NORTH' ? '#d946ef' : d.code === 'SOUTH' ? '#3b82f6' : '#0ea5e9' })),
+              title: 'Phân bổ theo Miền', 
+              totalValue: kpi.totalRevenue.toLocaleString('vi-VN') 
+            },
+          },
+          {
+            i: 'data-table', x: 4, y: 4, w: 4, h: 3,
+            component: 'DataTable',
+            props: { 
+              title: 'Top Tỉnh thành Doanh thu cao',
+              columns: [
+                { key: 'label', label: 'Tỉnh thành' },
+                { key: 'topic', label: 'Mã tỉnh' },
+                { key: 'value', label: 'Doanh thu', align: 'right' },
+              ],
+              data: charts.revenueByProvince.slice(0, 6).map((d: any) => ({ 
+                id: d.code, 
+                label: d.label, 
+                value: d.value.toLocaleString('vi-VN'), 
+                topic: d.code 
+              })),
+            },
+          },
+        ];
+
+        setWidgets(apiWidgets);
+        setLastUpdated(new Date().toLocaleTimeString('vi-VN'));
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleLayoutChange = React.useCallback((updatedWidgets: WidgetConfig[]) => {
+     // No-op for now unless we implementation dashboard persistence
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-[#0f121b] text-slate-200 overflow-hidden font-sans">
@@ -264,16 +189,64 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
       
       {activeTab === 'dashboard' && (
         <div className="flex-1 flex flex-col overflow-y-auto w-full">
-          <div className="px-8 pt-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/50 pb-4">
-            <Header title="Tổng quan Doanh nghiệp" subtitle="Cập nhật lúc: 3:17:35 PM" className="p-0 w-auto" />
+          <div className="px-8 pt-4 flex flex-col lg:flex-row lg:items-center justify-between border-b border-slate-800/50 pb-4 gap-4">
+            <Header 
+              title="Tổng quan Doanh nghiệp" 
+              subtitle={lastUpdated ? `Cập nhật lúc: ${lastUpdated}` : 'Đang đồng bộ dữ liệu...'} 
+              className="p-0 w-auto" 
+            />
+            
+            {/* ── Global Filter Bar ── */}
+            <div className="flex items-center gap-3 bg-slate-900/40 p-1.5 rounded-xl border border-slate-800/60">
+              <div className="flex items-center gap-2 px-3 border-r border-slate-800">
+                <span className="text-xs font-medium text-slate-500">Miền:</span>
+                <select 
+                  value={filters.regionId}
+                  onChange={(e) => setFilters(f => ({ ...f, regionId: e.target.value }))}
+                  className="bg-transparent text-sm font-semibold text-slate-200 outline-none cursor-pointer hover:text-fuchsia-400 transition-colors"
+                >
+                  <option value="" className="bg-slate-900">Toàn quốc</option>
+                  {regions.map(r => (
+                    <option key={r.id} value={r.id} className="bg-slate-900">{r.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 px-3 border-r border-slate-800">
+                <span className="text-xs font-medium text-slate-500">Giai đoạn:</span>
+                <select 
+                  value={filters.period}
+                  onChange={(e) => setFilters(f => ({ ...f, period: e.target.value }))}
+                  className="bg-transparent text-sm font-semibold text-slate-200 outline-none cursor-pointer hover:text-fuchsia-400 transition-colors"
+                >
+                  <option value="2025" className="bg-slate-900">Năm 2025</option>
+                  <option value="2024" className="bg-slate-900">Năm 2024</option>
+                </select>
+              </div>
+
+              <button 
+                onClick={fetchData}
+                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-fuchsia-400 transition-all active:scale-95"
+                title="Làm mới dữ liệu"
+              >
+                <Loader2 className={cn("h-4 w-4", isLoading && "animate-spin")} />
+              </button>
+            </div>
           </div>
           <main className="flex-1 p-8 pt-6 pb-12 mx-auto w-full" style={{ maxWidth: 1100 }}>
-            <DashboardGrid
-              widgets={displayWidgets}
-              registry={widgetRegistry}
-              widgetTemplates={widgetTemplates}
-              onLayoutChange={handleLayoutChange}
-            />
+            {isLoading ? (
+              <div className="flex h-64 w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-fuchsia-500" />
+                <span className="ml-3 text-slate-400">Đang tải dữ liệu doanh nghiệp...</span>
+              </div>
+            ) : (
+              <DashboardGrid
+                widgets={widgets}
+                registry={widgetRegistry}
+                widgetTemplates={[]} // Empty for now as we transition to API-driven
+                onLayoutChange={handleLayoutChange}
+              />
+            )}
           </main>
         </div>
       )}
