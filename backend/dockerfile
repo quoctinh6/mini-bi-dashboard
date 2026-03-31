@@ -1,0 +1,29 @@
+# =====================================================
+# Dockerfile chuẩn cho Backend Node.js + Prisma
+# =====================================================
+
+FROM node:18-alpine
+
+# Thêm các tool cần thiết để Prisma build binary
+RUN apk add --no-cache openssl
+
+WORKDIR /app
+
+# Cài dependencies trước (tận dụng Docker layer cache)
+# Dùng npm ci thay npm install: nhanh hơn, reproducible hơn
+COPY package*.json ./
+RUN npm ci && npm cache clean --force
+
+# Copy prisma schema và generate client (bắt buộc trước khi copy code)
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+# Copy toàn bộ code Backend
+COPY . .
+
+# Mở cổng 5000
+EXPOSE 5000
+
+# Production: chạy trực tiếp bằng node
+# (docker-compose-local.yml override CMD này thành: npm run dev)
+CMD ["node", "server.js"]

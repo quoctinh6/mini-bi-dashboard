@@ -190,7 +190,7 @@ async function main() {
   console.log('✅ UserRegionAccess (RLS) seeded');
 
   // ── Targets (12 tháng × 4 vùng × 2 năm) ────────────────
-  const regionTargets = [north.id, central.id, south.id, null];
+  const regionTargets = [north.id, central.id, south.id];
   for (const year of [2024, 2025]) {
     for (let month = 1; month <= 12; month++) {
       for (const regionId of regionTargets) {
@@ -211,6 +211,7 @@ async function main() {
 
   // ── Kernel404 Transactions — 50,000 rows ────────────────
   console.log('📦 Seeding 50,000 transactions (batch insert, please wait)...');
+  await prisma.kernel404.deleteMany({}); // Xóa sạch giao dịch cũ trước khi seed
 
   const provinceList   = Object.values(provinces);
   const categoryList   = Object.values(categories);

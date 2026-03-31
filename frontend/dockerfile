@@ -1,0 +1,32 @@
+# =====================================================
+# Dockerfile chuẩn cho Next.js (dùng Node.js server)
+# Next.js KHÔNG thể serve bằng Nginx tĩnh!
+# =====================================================
+
+# --- Giai đoạn 1: Cài dependencies ---
+FROM node:18-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+# --- Giai đoạn 2: Build source code ---
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# --- Giai đoạn 3: Chạy app bằng Next.js server (Node.js) ---
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Chỉ copy những gì cần thiết để chạy production
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

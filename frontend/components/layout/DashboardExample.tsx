@@ -15,12 +15,6 @@ import { dashboardServices } from '@/services/apiService';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
-const topEmployeesData = [
-  { id: '#NV001', date: 'Nguyễn Văn A', performance: 'Cao' as const, topic: '120% KPI' },
-  { id: '#NV002', date: 'Lê Thị B', performance: 'Cao' as const, topic: '105% KPI' },
-  { id: '#NV003', date: 'Trần Văn C', performance: 'Cao' as const, topic: '98% KPI' },
-];
-
 // ════════════════════════════════════════════════════
 // Widget Registry
 // ════════════════════════════════════════════════════
@@ -56,8 +50,6 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
 
   // Fetch Master Data (Regions)
   React.useEffect(() => {
-    // In a real app, we'd fetch actual regions from Master Data API
-    // For now, we seed with common BI regions
     setRegions([
       { id: 1, name: 'Miền Bắc', code: 'NORTH' },
       { id: 2, name: 'Miền Trung', code: 'CENTRAL' },
@@ -70,7 +62,6 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
     try {
       setIsLoading(true);
       
-      // Parse period into dates
       let startDate = '2025-01-01';
       let endDate = '2025-12-31';
       if (filters.period === '2024') {
@@ -87,7 +78,6 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
       if (response.success) {
         const { kpi, charts } = response.data;
 
-        // Map API data to widget props
         const apiWidgets: WidgetConfig[] = [
           {
             i: 'kpi-revenue', x: 0, y: 0, w: 2, h: 1,
@@ -174,8 +164,37 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
   }, [fetchData]);
 
   const handleLayoutChange = React.useCallback((updatedWidgets: WidgetConfig[]) => {
-     // No-op for now unless we implementation dashboard persistence
+    setWidgets(updatedWidgets);
   }, []);
+
+  // ── Widget Templates for the "+" Picker ──
+  const widgetTemplates: WidgetTemplate[] = [
+    {
+      component: 'KPICard', label: 'Thẻ KPI', category: 'kpi',
+      defaultW: 2, defaultH: 1, minW: 2, minH: 1, maxW: 4, maxH: 2,
+      defaultProps: { title: 'KPI mới', value: '0', trend: 0, trendDirection: 'neutral' },
+    },
+    {
+      component: 'MixedChart', label: 'Biểu đồ Kết hợp', category: 'chart',
+      defaultW: 6, defaultH: 3, minW: 4, minH: 2,
+      defaultProps: { title: 'Doanh thu & Mục tiêu', data: [], totalValue: '0 ₫' },
+    },
+    {
+      component: 'DonutChart', label: 'Biểu đồ Tròn', category: 'chart',
+      defaultW: 2, defaultH: 3, minW: 2, minH: 2,
+      defaultProps: { title: 'Cơ cấu', data: [], totalValue: '0 ₫' },
+    },
+    {
+      component: 'GaugeChart', label: 'Biểu đồ Tốc độ', category: 'chart',
+      defaultW: 4, defaultH: 3, minW: 3, minH: 2,
+      defaultProps: { title: 'Hiệu suất Miền', data: [], totalValue: '0 ₫' },
+    },
+    {
+      component: 'DataTable', label: 'Bảng Dữ liệu', category: 'data',
+      defaultW: 4, defaultH: 3, minW: 3, minH: 2,
+      defaultProps: { title: 'Danh sách chi tiết', data: [], columns: [] },
+    },
+  ];
 
   return (
     <div className="flex h-screen w-full bg-[#0f121b] text-slate-200 overflow-hidden font-sans">
@@ -196,7 +215,6 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
               className="p-0 w-auto" 
             />
             
-            {/* ── Global Filter Bar ── */}
             <div className="flex items-center gap-3 bg-slate-900/40 p-1.5 rounded-xl border border-slate-800/60">
               <div className="flex items-center gap-2 px-3 border-r border-slate-800">
                 <span className="text-xs font-medium text-slate-500">Miền:</span>
@@ -243,7 +261,7 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
               <DashboardGrid
                 widgets={widgets}
                 registry={widgetRegistry}
-                widgetTemplates={[]} // Empty for now as we transition to API-driven
+                widgetTemplates={widgetTemplates}
                 onLayoutChange={handleLayoutChange}
               />
             )}
