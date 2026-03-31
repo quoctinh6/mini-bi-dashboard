@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # 1. Khởi tạo Database MySQL (Y hệt Dev)
+  db:
+    image: mysql:8.0
+    container_name: kernel404_db_prod
+    restart: always # Tự động chạy lại nếu server sập
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mini_bi_dashboard
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data_prod:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Khởi tạo Backend Node.js (Production Mode)
+  backend:
+    build: 
+      context: ./backend
+      # Backend không target gì cả vì nó đang dùng Dockerfile 1 stage
+    container_name: kernel404_backend_prod
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://root:rootpassword@db:3306/mini_bi_dashboard
+      - PORT=5000
+    # KHÔNG DÙNG VOLUME, KHÔNG MOUNT MÃ NGUỒN TỪ NGOÀI VÀO
+    # Chỉ push DB cấu trúc mới nhất (không seed rác rưởi 50k dòng ảo nữa)
+    command: >
+      sh -c "npx prisma db push && 
+             node server.js"
+    depends_on:
+      db:
+        condition: service_healthy 
+
+  # 3. Khởi tạo Frontend Next.js (Production Mode Siêu Nhẹ)
+  frontend:
+    build: 
+      context: ./frontend
+      # SỬ DỤNG STAGE "runner" SIÊU NHẸ (khoảng ~150MB) 
+      # Bỏ qua hoàn toàn devDependencies, Storybook, mã nguồn cũ...
+      target: runner
+    container_name: kernel404_frontend_prod
+    restart: always
+    ports:
+      - "80:3000" # Map luôn ra port 80 cho người dùng truy cập trực tiếp bằng IP
+    environment:
+      - NODE_ENV=production
+    # KHÔNG DÙNG VOLUME, SỬ DỤNG BẢN BUILD TĨNH Ở TRONG FILE NEXT STANDALONE
+    # Lệnh chạy cực kì gọn gàng
+    command: node server.js
+    depends_on:
+      backend:
+         condition: service_started # Đợi backend lên là frontend chạy được
+
+# Volume xịn cho Production
+volumes:
+  db_data_prod:
