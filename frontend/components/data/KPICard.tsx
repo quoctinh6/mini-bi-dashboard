@@ -2,10 +2,12 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { NumberDisplay } from '@/components/ui/NumberDisplay';
 
 interface KPICardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
-  value: string;
+  value: string | number;
+  unit?: string;
   trend: number; // Percentage like 28.4 or -12.6
   trendDirection?: 'up' | 'down';
 }
@@ -13,6 +15,7 @@ interface KPICardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function KPICard({
   title,
   value,
+  unit,
   trend,
   trendDirection,
   className,
@@ -36,7 +39,7 @@ export function KPICard({
         </button>
       </div>
       <div className="mt-4 flex flex-wrap items-baseline gap-3">
-        <span className="text-3xl font-bold tracking-tight text-white">{value}</span>
+        <NumberDisplay value={value} unit={unit} className="text-3xl text-white" />
         
         {/* Trend Badge */}
         <Badge variant={isUp ? 'success' : 'destructive'} className="h-5 px-1.5">

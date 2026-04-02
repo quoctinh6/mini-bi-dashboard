@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { BaseChart } from './BaseChart';
-import { cn } from '@/lib/utils';
+import { cn, formatCompactNumber } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
+import { NumberDisplay } from '@/components/ui/NumberDisplay';
 import { Select } from '@/components/ui/Select';
 import { Calendar, Palette, Undo2 } from 'lucide-react';
 
 interface MixedChartProps extends React.HTMLAttributes<HTMLDivElement> {
     data: { month: string; actual: number; target: number }[];
     title?: string;
-    totalValue?: string;
+    totalValue?: string | number;
+    unit?: string;
     trend?: number;
     isEditable?: boolean;
 }
@@ -27,6 +29,7 @@ export const MixedChart: React.FC<MixedChartProps> = ({
     data, 
     title = "Doanh thu và Kế hoạch", 
     totalValue = "$240.000",
+    unit,
     trend = 24.6,
     isEditable = false,
     className,
@@ -86,66 +89,96 @@ export const MixedChart: React.FC<MixedChartProps> = ({
         }
     };
 
+    const maxVal = Math.max(...actualData, ...targetData, 100) * 1.15;
+
     const option = {
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'cross', label: { backgroundColor: '#1e293b' } },
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            axisPointer: { type: 'shadow', label: { backgroundColor: '#1e293b' } },
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
             borderColor: '#334155',
-            textStyle: { color: '#f8fafc' }
+            borderWidth: 1,
+            textStyle: { color: '#f8fafc', fontSize: 12 },
+            padding: [10, 12],
+            formatter: (params: any) => {
+                let res = `<div style="margin-bottom: 8px; font-weight: 600; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">${params[0].name}</div>`;
+                params.forEach((item: any) => {
+                    res += `
+                        <div style="display: flex; align-items: center; justify-between; gap: 20px; margin-top: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color};"></span>
+                                <span style="color: #cbd5e1;">${item.seriesName}</span>
+                            </div>
+                            <span style="font-weight: 700; color: #f8fafc;">${formatCompactNumber(item.value)} ${unit || ''}</span>
+                        </div>
+                    `;
+                });
+                return res;
+            }
         },
         legend: {
             data: ['Thực tế', 'Kế hoạch'],
             top: 0,
-            itemWidth: 8,
-            itemHeight: 8,
+            right: '0%',
+            itemWidth: 10,
+            itemHeight: 10,
             icon: 'circle',
-            textStyle: { color: '#94a3b8' }
+            textStyle: { color: '#94a3b8', fontSize: 11 }
         },
         grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            top: '40px',
+            left: '0%',
+            right: '2%',
+            bottom: '0%',
+            top: '45px',
             containLabel: true
         },
-        xAxis: [
-            {
-                type: 'category',
-                data: xAxisData,
-                axisPointer: { type: 'shadow' },
-                axisLine: { show: false },
-                axisTick: { show: false },
-                axisLabel: { color: '#94a3b8', margin: 16 }
+        xAxis: {
+            type: 'category',
+            data: xAxisData,
+            axisTick: { show: false },
+            axisLine: { show: false },
+            axisLabel: { 
+                color: '#64748b', 
+                fontSize: 10,
+                margin: 15
             }
-        ],
-        yAxis: [
-            {
-                type: 'value',
-                min: 0,
-                max: 15000,
-                interval: 2500,
-                axisLabel: { color: '#94a3b8' },
-                splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+        },
+        yAxis: {
+            type: 'value',
+            max: Math.ceil(maxVal / 100) * 100,
+            splitLine: { 
+                lineStyle: { color: '#1e293b', type: 'dashed', opacity: 0.5 }
+            },
+            axisLabel: { 
+                color: '#64748b', 
+                fontSize: 10,
+                formatter: (value: number) => formatCompactNumber(value)
             }
-        ],
+        },
         series: [
             {
                 name: 'Thực tế',
                 type: 'bar',
                 data: actualData,
-                barWidth: '40%',
-                itemStyle: { color: actualColor, borderRadius: [4, 4, 0, 0] }
+                barWidth: '35%',
+                itemStyle: { 
+                    color: actualColor, 
+                    borderRadius: [4, 4, 0, 0],
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(0,0,0,0.3)'
+                }
             },
             {
                 name: 'Kế hoạch',
                 type: 'line',
                 data: targetData,
                 itemStyle: { color: targetColor },
-                lineStyle: { width: 2 },
+                lineStyle: { width: 2, type: 'dashed' },
                 smooth: true,
-                symbolSize: 6,
-                symbol: 'circle'
+                symbol: 'circle',
+                symbolSize: 4,
+                showSymbol: false,
+                emphasis: { showSymbol: true }
             }
         ]
     };
@@ -177,7 +210,7 @@ export const MixedChart: React.FC<MixedChartProps> = ({
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-white">{totalValue}</span>
+                        <NumberDisplay value={totalValue} unit={unit} className="text-2xl text-white" />
                         {trend && (
                             <Badge variant="success" className="h-5 px-1.5 py-0 font-medium">
                                 {trend}% ↗

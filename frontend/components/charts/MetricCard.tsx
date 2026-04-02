@@ -1,15 +1,17 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, AlertCircle, Activity } from 'lucide-react';
+import { NumberDisplay } from '@/components/ui/NumberDisplay';
 
 interface MetricCardProps {
     title: string;
     value: string | number;
+    unit?: string;
     growthRate?: number; // % tăng trưởng
     isPositive?: boolean;
     target?: number; // Mục tiêu (để báo động đỏ nếu < 50%)
 }
 
-export const MetricCard: React.FC<MetricCardProps> = ({ title, value, growthRate, isPositive, target }) => {
+export const MetricCard: React.FC<MetricCardProps> = ({ title, value, unit, growthRate, isPositive, target }) => {
     
     // Check cảnh báo: Giá trị < 50% target
     const isWarning = target && typeof value === 'number' && value < (target * 0.5);
@@ -38,8 +40,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({ title, value, growthRate
             </div>
             
             <div className="relative z-10 flex flex-col justify-end min-h-[4rem]">
-                <h2 className={`text-4xl font-extrabold tracking-tight ${isWarning ? 'text-red-600' : 'text-slate-800'}`}>
-                    {typeof value === 'number' ? new Intl.NumberFormat('vi-VN').format(value) : value}
+                <h2 className={`text-4xl ${isWarning ? 'text-red-600' : 'text-slate-800'}`}>
+                    <NumberDisplay value={value} unit={unit} />
                 </h2>
                 
                 {growthRate !== undefined && (

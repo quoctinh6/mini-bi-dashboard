@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { uploadData } = require('../controllers/uploadController');
+const { simulateApiSync } = require('../controllers/integrationController');
 
 // Cấu hình Multer để lưu file tạm vào thư mục uploads
 const storage = multer.diskStorage({
@@ -37,5 +38,6 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 // Route POST: /api/data/upload
 router.post('/upload', upload.single('file'), uploadData);
+router.post('/sync', simulateApiSync);
 
 module.exports = router;

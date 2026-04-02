@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Select } from '@/components/ui/Select';
 import { Calendar } from 'lucide-react';
+import { NumberDisplay } from '@/components/ui/NumberDisplay';
 
 export interface DataRecord {
   id: string;
@@ -80,7 +81,7 @@ export function DataTable({
                       key={col.key.toString()} 
                       className={cn("py-3 px-2 text-slate-300", col.align === 'right' && 'text-right')}
                     >
-                      {val}
+                      {typeof val === 'number' ? <NumberDisplay value={val} className="text-xs" /> : val}
                     </td>
                   );
                 })}

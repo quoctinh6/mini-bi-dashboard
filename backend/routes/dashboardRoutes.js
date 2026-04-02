@@ -4,11 +4,11 @@
 
 const express = require('express');
 const router  = express.Router();
-const authMiddleware     = require('../middlewares/authMiddleware');
+const { requireAuth } = require('../middlewares/authMiddleware');
 const { getOverview }   = require('../controllers/dashboardController');
 
 // All dashboard routes require valid JWT
-router.use(authMiddleware);
+router.use(requireAuth);
 
 /**
  * GET /api/dashboard/overview

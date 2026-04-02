@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatCompactNumber } from '@/lib/utils';
 import { Palette, Undo2 } from 'lucide-react';
+import { NumberDisplay } from '@/components/ui/NumberDisplay';
 
 // ── Palette presets để dễ chỉnh trong Storybook controls ──
 export const DONUT_PALETTES = {
@@ -24,7 +25,8 @@ export interface DonutSegment {
 export interface DonutChartProps extends React.HTMLAttributes<HTMLDivElement> {
     data?: DonutSegment[];
     title?: string;
-    totalValue?: string;
+    totalValue?: string | number;
+    unit?: string;
     top?: number;
     palette?: PaletteName;          // chọn bảng màu nhanh
     customColors?: string[];        // hoặc truyền mảng màu tùy ý
@@ -32,6 +34,8 @@ export interface DonutChartProps extends React.HTMLAttributes<HTMLDivElement> {
     showPercentage?: boolean;
     size?: number;                  // kích thước SVG px
     isEditable?: boolean;           // cờ để quản lý màu
+    onSegmentSelect?: (label: string | null) => void; // callback khi click segment
+    selectedLabel?: string | null;  // nhãn đang được chọn (để highlight)
 }
 
 const defaultData: DonutSegment[] = [
@@ -75,6 +79,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     data = defaultData,
     title = 'Cơ cấu ngành hàng',
     totalValue = '150.000',
+    unit,
     top = 3,
     palette = 'vivid',
     customColors,
@@ -82,6 +87,8 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     showPercentage = true,
     size = 200,
     isEditable = false,
+    onSegmentSelect,
+    selectedLabel,
     className,
     ...props
 }) => {
@@ -221,11 +228,18 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                             fill={seg.color!}
                             className="transition-transform duration-200 origin-center"
                             style={{
-                                transform: hoverIdx === i ? 'scale(1.045)' : 'scale(1)',
-                                filter: hoverIdx === i ? 'brightness(1.25) drop-shadow(0 0 6px rgba(0,0,0,.35))' : 'none',
-                                cursor: isEditable ? 'crosshair' : 'default',
+                                transform: (hoverIdx === i || selectedLabel === seg.label) ? 'scale(1.045)' : 'scale(1)',
+                                filter: (hoverIdx === i || selectedLabel === seg.label) ? 'brightness(1.25) drop-shadow(0 0 6px rgba(0,0,0,.35))' : 'none',
+                                cursor: isEditable ? 'crosshair' : 'pointer',
                             }}
-                            onClick={() => isEditable && document.getElementById(`color-picker-donut-${seg.label}`)?.click()}
+                            onClick={() => {
+                                if (isEditable) {
+                                    document.getElementById(`color-picker-donut-${seg.label}`)?.click();
+                                } else if (onSegmentSelect) {
+                                    // Toggle selection
+                                    onSegmentSelect(selectedLabel === seg.label ? null : seg.label);
+                                }
+                            }}
                             onMouseMove={(e) => {
                                 setTooltip({ x: e.clientX, y: e.clientY, item: { label: seg.label, value: seg.value, pct: seg.pct, color: seg.color! } });
                                 setHoverIdx(i);
@@ -235,12 +249,37 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                     ))}
 
                     {/* Center text */}
-                    <text x={cx} y={cy - 6} textAnchor="middle" className="fill-gray-400 text-[10px] font-medium">
-                        Tổng
-                    </text>
-                    <text x={cx} y={cy + 12} textAnchor="middle" className="fill-white text-sm font-bold">
-                        {totalValue}
-                    </text>
+                    <foreignObject 
+                        x={cx - outerR} 
+                        y={cy - 30} 
+                        width={outerR * 2} 
+                        height={60}
+                        style={{ pointerEvents: 'none' }}
+                    >
+                        <div className="flex flex-col items-center justify-center h-full w-full pointer-events-none select-none">
+                            <span className={cn(
+                                "text-[10px] uppercase font-bold tracking-wider transition-all duration-300",
+                                tooltip ? "text-slate-400" : "text-slate-500"
+                            )}>
+                                {tooltip ? tooltip.item.label : "Tổng cộng"}
+                            </span>
+                            <div className="flex items-center justify-center gap-1.5 transition-all duration-300">
+                                <NumberDisplay 
+                                    value={tooltip ? tooltip.item.value : totalValue} 
+                                    unit={unit} 
+                                    className={cn(
+                                        "transition-all duration-300 font-bold",
+                                        tooltip ? "text-base text-white" : "text-sm text-slate-300"
+                                    )} 
+                                />
+                            </div>
+                            {tooltip && (
+                                <div className="text-[10px] font-bold mt-0.5 animate-in fade-in slide-in-from-bottom-1 duration-300" style={{ color: tooltip.item.color }}>
+                                    {((tooltip.item.value / (total || 1)) * 100).toFixed(1)}%
+                                </div>
+                            )}
+                        </div>
+                    </foreignObject>
                 </svg>
             </div>
 
@@ -251,18 +290,33 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                     return (
                         <div
                             key={i}
-                            className="flex items-center justify-between transition-opacity hover:opacity-80"
-                            style={{ cursor: isEditable ? 'pointer' : 'default' }}
-                            onClick={() => isEditable && document.getElementById(`color-picker-donut-${item.label}`)?.click()}
+                            className={cn(
+                                "flex items-center justify-between transition-all duration-200 rounded-md px-1 py-0.5",
+                                (hoverIdx !== null && chartData[hoverIdx]?.label === item.label) ? "bg-slate-800/50" : 
+                                selectedLabel === item.label ? "bg-fuchsia-500/10 border border-fuchsia-500/20 shadow-[0_0_10px_rgba(217,70,239,0.1)]" : "hover:bg-slate-800/30"
+                            )}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                                if (isEditable) {
+                                    document.getElementById(`color-picker-donut-${item.label}`)?.click();
+                                } else if (onSegmentSelect) {
+                                    onSegmentSelect(selectedLabel === item.label ? null : item.label);
+                                }
+                            }}
                             onMouseEnter={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
+                                const idx = chartData.findIndex(d => d.label === item.label);
+                                setHoverIdx(idx >= 0 ? idx : null);
                                 setTooltip({
                                     x: rect.right - 100,
                                     y: rect.top - 40,
                                     item: { label: item.label, value: item.value, pct: item.value / total, color: item.color! },
                                 });
                             }}
-                            onMouseLeave={() => setTooltip(null)}
+                            onMouseLeave={() => {
+                                setHoverIdx(null);
+                                setTooltip(null);
+                            }}
                         >
                             <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full flex-shrink-0 ring-1 ring-transparent hover:ring-white transition-all shadow-[0_0_8px_rgba(255,255,255,0.2)]" style={{ backgroundColor: item.color }} />
@@ -299,7 +353,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                         <span className="text-xs text-gray-300 font-medium">{tooltip.item.label}</span>
                     </div>
                     <div className="flex items-end justify-between gap-4 mt-1">
-                        <span className="text-sm font-bold tracking-tight">{tooltip.item.value.toLocaleString()}</span>
+                        <span className="text-sm font-bold tracking-tight">{formatCompactNumber(tooltip.item.value)}</span>
                         <span className="text-xs font-semibold" style={{ color: tooltip.item.color }}>
                             {(tooltip.item.pct * 100).toFixed(1)}%
                         </span>

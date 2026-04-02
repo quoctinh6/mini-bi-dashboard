@@ -7,8 +7,7 @@
  *   const data = await prisma.kernel404.findMany({ where: whereClause });
  */
 
-const { PrismaClient } = require('@prisma/client');
-
+const defaultPrisma = require('../config/prisma');
 /**
  * Builds the Prisma `where` clause that enforces RLS.
  *
@@ -17,10 +16,11 @@ const { PrismaClient } = require('@prisma/client');
  *  - MANAGER / EMPLOYEE → restricted to their assigned regionIds via UserRegionAccess
  *
  * @param {object} jwtUser   - Decoded JWT payload: { id, role }
- * @param {PrismaClient} prisma
+ * @param {object} prisma    - Prisma client (default: defaultPrisma)
  * @returns {Promise<object>} Prisma where-clause fragment
  */
-async function buildRlsFilter(jwtUser, prisma) {
+async function buildRlsFilter(jwtUser, passedPrisma) {
+  const prisma = passedPrisma || require('../config/prisma');
   const { id: userId, role } = jwtUser;
 
   // Admins and Directors see everything
@@ -46,7 +46,7 @@ async function buildRlsFilter(jwtUser, prisma) {
 /**
  * Convenience: verify and throw 403 if user can't access a specific regionId
  */
-async function assertRegionAccess(jwtUser, regionId, prisma) {
+async function assertRegionAccess(jwtUser, regionId, prisma = defaultPrisma) {
   if (jwtUser.role === 'ADMIN' || jwtUser.role === 'DIRECTOR') return true;
 
   const access = await prisma.userRegionAccess.findFirst({

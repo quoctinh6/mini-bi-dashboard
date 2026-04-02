@@ -6,6 +6,7 @@ import { DataManagementLayout } from '@/components/layout/DataManagementLayout';
 import { useAuth } from '@/lib/AuthContext';
 import { LoginPage } from '@/components/layout/LoginPage';
 import { PermissionsSettings } from '@/components/layout/PermissionsSettings';
+import QueryProvider from '@/providers/QueryProvider';
 
 function AppLayoutInner() {
   const { currentUser } = useAuth();

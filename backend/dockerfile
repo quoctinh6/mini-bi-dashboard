@@ -12,7 +12,7 @@ WORKDIR /app
 # Cài dependencies trước (tận dụng Docker layer cache)
 # Dùng npm ci thay npm install: nhanh hơn, reproducible hơn
 COPY package*.json ./
-RUN npm ci && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy prisma schema và generate client (bắt buộc trước khi copy code)
 COPY prisma ./prisma/

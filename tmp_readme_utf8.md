@@ -1,0 +1,74 @@
+# Mini BI Dashboard
+
+## Giới thiệu (Introduction)
+Mini BI Dashboard là một ứng dụng phân tích dữ liệu tổng hợp (Business Intelligence) toàn diện được xây dựng với kiến trúc Client-Server hiện đại. Ứng dụng giúp người dùng theo dõi các chỉ số quan trọng, trực quan hóa dữ liệu qua các biểu đồ đa dạng và tự động tạo báo cáo chuyên nghiệp.
+
+## Kiến trúc & Công nghệ (Tech Stack)
+
+### 1. Frontend (Giao diện người dùng)
+- **Framework:** Next.js 14, React 18, TypeScript
+- **Styling:** Tailwind CSS, PostCSS
+- **Libraries & Công cụ:**
+  - **ECharts (`echarts`, `echarts-for-react`):** Vẽ các biểu đồ tương tác phức tạp (MixedChart, PieChart, GeoChart).
+  - **`react-grid-layout` & `react-resizable`:** Hệ thống lưới động cho phép kéo thả, thay đổi kích thước và tùy chỉnh vị trí các widget (Metric Cards, Charts) trên dashboard theo ý muốn của người dùng.
+  - **`html2canvas` & `jsPDF`:** Hỗ trợ tính năng chụp ảnh dashboard và xuất trực tiếp thành file PDF trên trình duyệt.
+  - **`axios`:** Tương tác với hệ thống API backend.
+  - **`lucide-react`:** Cung cấp hệ thống biểu tượng (icons) hiện đại.
+
+### 2. Backend (Máy chủ xử lý)
+- **Framework:** Node.js, Express.js
+- **Database & ORM:** MySQL kết hợp với Prisma Client để quản lý và truy vấn cơ sở dữ liệu (các model như `User`, `Kernel404` (lưu giao dịch), `Target`, `DashboardSetting`).
+- **Xác thực (Authentication):** Sử dụng JSON Web Token (`jsonwebtoken`) cho bảo mật API.
+- **Xử lý tệp (File Handling & Data Ingestion):**
+  - **`multer`:** Middleware xử lý tải lên tệp tin (Excel/CSV) từ phía người dùng.
+  - **`xlsx` (SheetJS):** Thư viện cốt lõi để đọc dữ liệu từ tệp Excel tải lên và **tạo/xuất tệp Excel (.xlsx)** từ máy chủ.
+  - **Server-Side Streaming/Buffer:** Kỹ thuật xuất dữ liệu quy mô lớn (hàng chục ngàn dòng) trực tiếp từ bộ nhớ đệm máy chủ, giúp tối ưu hiệu năng và tránh treo trình duyệt.
+- **Tự động hóa (Automation & Cron Jobs):** 
+  - `node-cron`: Đặt lịch các tác vụ chạy ngầm định kỳ (Báo cáo, Ingestion).
+  - `puppeteer`: Render và xuất HTML thành tài liệu PDF/Screen Capture trên backend ngầm để gửi báo cáo tự động.
+- **Gửi Mail:** `nodemailer` để tự động gửi báo cáo xuất ra từ Puppeteer định kỳ.
+
+## Chức năng chính (Features)
+
+### 📊 Trực quan hóa Dữ liệu (Data Visualization)
+- **Metrics Cards (Thẻ chỉ số):** Hiển thị các chỉ số sống còn như *Tổng doanh thu, Đơn hàng mới, Khách hàng kích hoạt, Lợi nhuận ròng* kèm theo màu sắc biểu thị tăng/giảm so với mục tiêu.
+- **Mixed Chart:** Biểu đồ kết hợp (Cột + Đường) phân tích thay đổi doanh thu qua các mốc thời gian.
+- **Pie Chart:** Phân bổ tỷ trọng doanh số giữa các Phòng ban (Department).
+- **Geo Chart:** Bản đồ nhiệt (Heatmap) thể hiện tổng quan kinh doanh theo Tỉnh/vùng miền (Province/Zone).
+
+### 🔍 Lọc Dữ liệu Động & Cross-Filtering
+- **Global Filters:** Lọc dữ liệu trên toàn bộ Dashboard theo các trường như *Ngày tháng (startDate, endDate), Khu vực, Ngành hàng*.
+- **Tương tác Cross-Filtering:** Khi người dùng click (Drill-down) vào một biểu đồ, các widget khác sẽ tự động điều chỉnh hiển thị tương ứng.
+
+### 🎨 Tùy biến Giao diện (Customizable Layout)
+- Người dùng có thể kéo thả, thay đổi kích thước các widget.
+- Lưu trữ cấu trúc Layout (Layout Config) theo từng tài khoản người dùng (`DashboardSetting`).
+
+### 🖨️ Xuất Báo cáo & Dữ liệu (Export & Reporting)
+- **Xuất Excel thông minh:** Cho phép người dùng tải về toàn bộ dữ liệu đã lọc (không bị giới hạn bởi phân trang) dưới dạng tệp `.xlsx` có định dạng chuẩn, hỗ trợ tiếng Việt hoàn hảo.
+- **Xuất PDF thủ công:** Chụp ảnh Dashboard hiện tại và xuất thành file PDF chất lượng cao ngay trên trình duyệt.
+- **Báo cáo định kỳ (Cron Jobs):** Tự động gửi báo cáo Dashboard qua Email hàng ngày/tuần.
+
+### 📥 Nhập và Quản lý Dữ liệu
+- **Tải lên hàng loạt (Bulk Upload):** Nhập hàng ngàn giao dịch từ file Excel vào hệ thống chỉ trong vài giây.
+- **Nhập thủ công (Manual Entry):** Giao diện thân thiện để thêm/sửa từng bản ghi giao dịch đơn lẻ.
+- **Đồng bộ API ERP:** Tích hợp cơ chế giả lập đồng bộ dữ liệu từ các hệ thống ERP bên ngoài.
+
+### 🔒 Bảo mật Row-Level Security (RLS)
+- Hệ thống tự động lọc dữ liệu dựa trên quyền hạn của người dùng đăng nhập. 
+- *Ví dụ:* Quản lý Miền Bắc chỉ nhìn thấy và xuất được dữ liệu của Miền Bắc, trong khi Giám đốc (Director) có thể xem toàn quốc.
+
+## Hướng dẫn cài đặt sơ bộ
+
+**1. Backend**
+1. Di chuyển vào `./backend`
+2. Cấu hình `.env` kết nối CSDL (VD: `DATABASE_URL="mysql://USER:PASSWORD@HOST:3306/DATABASE"`)
+3. Chạy `npm install`
+4. Khởi tạo DB bằng `npx prisma db push` (hoặc `npx prisma migrate dev`) và `npx prisma generate`
+5. Chạy server bằng: `npm run dev` (Cổng mặc định: 5000)
+
+**2. Frontend**
+1. Di chuyển vào `./frontend`
+2. Chạy `npm install`
+3. Cấu hình các biến môi trường nếu cần kết nối đến `http://localhost:5000`
+4. Khởi chạy ứng dụng: `npm run dev` (Cổng mặc định: 3000)

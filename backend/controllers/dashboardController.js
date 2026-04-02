@@ -17,13 +17,14 @@ const { getDashboardOverview } = require('../services/dashboardService');
  */
 const getOverview = async (req, res) => {
   try {
-    const { startDate, endDate, regionId } = req.query;
+    const { startDate, endDate, regionId, categoryId } = req.query;
 
     // req.user is attached by authMiddleware (JWT decoded payload)
     const result = await getDashboardOverview(req.user, {
       startDate,
       endDate,
       regionId,
+      categoryId,
     });
 
     return res.status(200).json({ success: true, data: result });

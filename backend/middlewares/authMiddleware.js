@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key_123';
  * Middleware xác thực token và đính kèm thông tin user vào request
  * Dùng cho RLS (Row-level Security)
  */
-const authMiddleware = (req, res, next) => {
+const requireAuth = (req, res, next) => {
   // 1. Lấy token từ header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -33,4 +33,22 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+/**
+ * Middleware kiểm tra vai trò người dùng
+ */
+const requireRole = (roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Bạn không có quyền thực hiện hành động này.' 
+      });
+    }
+    next();
+  };
+};
+
+module.exports = {
+  requireAuth,
+  requireRole
+};

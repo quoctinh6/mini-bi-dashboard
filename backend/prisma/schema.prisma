@@ -124,6 +124,7 @@ model Kernel404 {
   @@index([regionId])
   @@index([categoryId])
   @@index([provinceId])
+  @@index([departmentId])
   @@map("kernel404_transactions")
 }
 

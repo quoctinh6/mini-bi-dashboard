@@ -60,10 +60,10 @@ function getPreviousPeriod(startDate, endDate) {
  *  - targetAchievement  (current vs target)
  *
  * @param {object} jwtUser  - { id, role } from JWT payload
- * @param {object} params   - { startDate?, endDate?, regionId? }
+ * @param {object} params   - { startDate?, endDate?, regionId?, categoryId? }
  */
 async function getDashboardOverview(jwtUser, params = {}) {
-  const { startDate, endDate, regionId } = params;
+  const { startDate, endDate, regionId, categoryId } = params;
 
   // 1. Build RLS filter — this is the security gate
   const rlsWhere = await buildRlsFilter(jwtUser, prisma);
@@ -75,19 +75,22 @@ async function getDashboardOverview(jwtUser, params = {}) {
     endDate   || `${new Date().getFullYear()}-12-31`
   );
 
-  // 3. Optional region drill-down (applied on top of RLS)
-  const regionFilter = regionId ? { regionId: parseInt(regionId, 10) } : {};
+  // 3. Optional region/category drill-down (applied on top of RLS)
+  const regionFilter   = regionId ? { regionId: parseInt(regionId, 10) } : {};
+  const categoryFilter = categoryId ? { categoryId: parseInt(categoryId, 10) } : {};
 
   // Combine all where conditions
   const baseWhere = {
     ...rlsWhere,
     ...regionFilter,
+    ...categoryFilter,
     orderDate: dateFilter,
   };
 
   const prevWhere = {
     ...rlsWhere,
     ...regionFilter,
+    ...categoryFilter,
     orderDate: prevDateFilter,
   };
 
@@ -126,7 +129,10 @@ async function getDashboardOverview(jwtUser, params = {}) {
 
       let extraFilter = '';
       if (regionFilter.regionId) {
-        extraFilter = `AND region_id = ${regionFilter.regionId}`;
+        extraFilter += ` AND region_id = ${regionFilter.regionId}`;
+      }
+      if (categoryFilter.categoryId) {
+        extraFilter += ` AND category_id = ${categoryFilter.categoryId}`;
       }
 
       // Convert dates to ISO strings for MySQL safety in raw queries

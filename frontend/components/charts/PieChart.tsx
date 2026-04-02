@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { BaseChart } from './BaseChart';
+import { formatCompactNumber } from '@/lib/utils';
 
 interface PieChartProps {
     data: { label: string; value: number }[];
@@ -25,7 +26,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data, title = "Tỷ trọng 
         },
         tooltip: {
             trigger: 'item',
-            formatter: '{a} <br/>{b} : {c} ({d}%)'
+            formatter: (params: any) => `${params.seriesName} <br/>${params.name} : ${formatCompactNumber(params.value)} (${params.percent}%)`
         },
         legend: {
             bottom: '0',

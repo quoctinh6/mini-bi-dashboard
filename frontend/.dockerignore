@@ -7,3 +7,14 @@ node_modules
 *.md
 .storybook
 storybook-static
+**/*.stories.tsx
+**/*.stories.ts
+**/*.test.tsx
+**/*.test.ts
+**/*.spec.tsx
+**/*.spec.ts
+vitest.config.ts
+vitest.shims.d.ts
+.eslintignore
+.dockerignore
+tsconfig.tsbuildinfo

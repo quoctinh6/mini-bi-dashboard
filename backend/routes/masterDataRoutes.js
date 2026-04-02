@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router  = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware'); // Optional, but usually good for BI
+const { requireAuth } = require('../middlewares/authMiddleware'); // Optional, but usually good for BI
 const { 
   getProvinces, 
   getCategories, 
@@ -14,7 +14,7 @@ const {
 } = require('../controllers/masterDataController');
 
 // All master data routes require JWT (optional)
-router.use(authMiddleware);
+router.use(requireAuth);
 
 /**
  * GET /api/master/...

@@ -56,8 +56,25 @@ export const dataServices = {
         const response = await api.get('/data/transactions', { params });
         return response.data;
     },
+    getTransactionCount: async () => {
+        const response = await api.get('/data/transactions/count');
+        return response.data;
+    },
+    exportTransactions: async (params: any = {}) => {
+        // params can include columns: 'id,date,revenue' etc.
+        const response = await api.get('/data/export', { 
+            params, 
+            responseType: 'blob',
+            timeout: 60000 // 60 seconds
+        });
+        return response.data;
+    },
     createManualEntry: async (data: any) => {
         const response = await api.post('/data/manual', data);
+        return response.data;
+    },
+    updateManualEntry: async (id: string, data: any) => {
+        const response = await api.put(`/data/manual/${id}`, data);
         return response.data;
     },
     uploadData: async (file: File) => {
@@ -66,6 +83,32 @@ export const dataServices = {
         const response = await api.post('/data/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
+        return response.data;
+    },
+    syncApiData: async () => {
+        const response = await api.post('/data/sync');
+        return response.data;
+    }
+};
+
+export const userServices = {
+    getUsers: async () => {
+        const response = await api.get('/users');
+        return response.data;
+    },
+    createUser: async (data: any) => {
+        const response = await api.post('/users', data);
+        return response.data;
+    },
+    updatePermissions: async (id: number, data: any) => {
+        const response = await api.put(`/users/${id}/permissions`, data);
+        return response.data;
+    }
+};
+
+export const settingsServices = {
+    testEmail: async (data: { email: string }) => {
+        const response = await api.post('/settings/test-email', data);
         return response.data;
     }
 };
