@@ -210,39 +210,39 @@ async function main() {
   console.log('✅ Targets seeded (2024 + 2025)');
 
   // ── Kernel404 Transactions — 50,000 rows ────────────────
-  // console.log('📦 Seeding 50,000 transactions (batch insert, please wait)...');
-  // await prisma.kernel404.deleteMany({}); // Xóa sạch giao dịch cũ trước khi seed
+  console.log('📦 Seeding 50,000 transactions (batch insert, please wait)...');
+  await prisma.kernel404.deleteMany({}); // Xóa sạch giao dịch cũ trước khi seed
 
-  // const provinceList   = Object.values(provinces);
-  // const categoryList   = Object.values(categories);
-  // const departmentList = Object.values(departments);
-  // const BATCH_SIZE = 1000;
-  // const TOTAL      = 50_000;
+  const provinceList   = Object.values(provinces);
+  const categoryList   = Object.values(categories);
+  const departmentList = Object.values(departments);
+  const BATCH_SIZE = 1000;
+  const TOTAL      = 50_000;
 
-  // for (let i = 0; i < TOTAL; i += BATCH_SIZE) {
-  //   const batchLen = Math.min(BATCH_SIZE, TOTAL - i);
-  //   const batch = Array.from({ length: batchLen }, () => {
-  //     const province = provinceList[rand(0, provinceList.length - 1)];
-  //     const category = categoryList[rand(0, categoryList.length - 1)];
-  //     const dept     = departmentList[rand(0, departmentList.length - 1)];
-  //     const revenue  = randDecimal(5_000_000, 500_000_000);
-  //     const cost     = parseFloat((revenue * randDecimal(0.35, 0.65)).toFixed(2));
+  for (let i = 0; i < TOTAL; i += BATCH_SIZE) {
+    const batchLen = Math.min(BATCH_SIZE, TOTAL - i);
+    const batch = Array.from({ length: batchLen }, () => {
+      const province = provinceList[rand(0, provinceList.length - 1)];
+      const category = categoryList[rand(0, categoryList.length - 1)];
+      const dept     = departmentList[rand(0, departmentList.length - 1)];
+      const revenue  = randDecimal(5_000_000, 500_000_000);
+      const cost     = parseFloat((revenue * randDecimal(0.35, 0.65)).toFixed(2));
 
-  //     return {
-  //       orderDate:    randDate(2024, 2025),
-  //       revenue,
-  //       cost,
-  //       quantity:     rand(1, 20),
-  //       regionId:     province.regionId,
-  //       provinceId:   province.id,
-  //       categoryId:   category.id,
-  //       departmentId: dept.id,
-  //     };
-  //   });
+      return {
+        orderDate:    randDate(2024, 2025),
+        revenue,
+        cost,
+        quantity:     rand(1, 20),
+        regionId:     province.regionId,
+        provinceId:   province.id,
+        categoryId:   category.id,
+        departmentId: dept.id,
+      };
+    });
 
-  //   await prisma.kernel404.createMany({ data: batch });
-  //   process.stdout.write(`\r  ↳ Inserted ${Math.min(i + BATCH_SIZE, TOTAL).toLocaleString()} / ${TOTAL.toLocaleString()}`);
-  // }
+    await prisma.kernel404.createMany({ data: batch });
+    process.stdout.write(`\r  ↳ Inserted ${Math.min(i + BATCH_SIZE, TOTAL).toLocaleString()} / ${TOTAL.toLocaleString()}`);
+  }
 
   console.log('\n✅ Transactions seeded (50,000 rows)');
   console.log('\n🎉 Seed complete!');
