@@ -34,7 +34,7 @@ services:
       - /app/node_modules 
     command: >
       sh -c "npx prisma db push && 
-             npx prisma db seed && 
+             npx prisma db seed && # Xóa hoặc comment dòng này nếu không muốn tạo 50,000 dòng dữ liệu mẫu
              npm run dev"
     depends_on:
       db:

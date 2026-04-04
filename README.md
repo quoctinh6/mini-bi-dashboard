@@ -58,17 +58,108 @@ Mini BI Dashboard là một ứng dụng phân tích dữ liệu tổng hợp (B
 - Hệ thống tự động lọc dữ liệu dựa trên quyền hạn của người dùng đăng nhập. 
 - *Ví dụ:* Quản lý Miền Bắc chỉ nhìn thấy và xuất được dữ liệu của Miền Bắc, trong khi Giám đốc (Director) có thể xem toàn quốc.
 
-## Hướng dẫn cài đặt sơ bộ
+## 🚀 DevOps & Triển khai (Deployment)
 
-**1. Backend**
-1. Di chuyển vào `./backend`
-2. Cấu hình `.env` kết nối CSDL (VD: `DATABASE_URL="mysql://USER:PASSWORD@HOST:3306/DATABASE"`)
-3. Chạy `npm install`
-4. Khởi tạo DB bằng `npx prisma db push` (hoặc `npx prisma migrate dev`) và `npx prisma generate`
-5. Chạy server bằng: `npm run dev` (Cổng mặc định: 5000)
+Dự án được tối ưu hóa cho containerization bằng Docker, hỗ trợ cả môi trường phát triển (Development) và vận hành thực tế (Production).
 
-**2. Frontend**
-1. Di chuyển vào `./frontend`
-2. Chạy `npm install`
-3. Cấu hình các biến môi trường nếu cần kết nối đến `http://localhost:5000`
-4. Khởi chạy ứng dụng: `npm run dev` (Cổng mặc định: 3000)
+### 1. Phát triển local với Docker (Development)
+Sử dụng cấu hình này để có môi trường ổn định, hỗ trợ **Hot Reload** (code thay đổi trong máy của bạn sẽ được cập nhật ngay lập tức vào container).
+
+*   **Yêu cầu:** Đã cài đặt [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+*   **Cách chạy:**
+    ```bash
+    docker compose up --build
+    ```
+*   **Sau khi chạy:**
+    -   Frontend: `http://localhost:3000`
+    -   Backend API: `http://localhost:5000`
+    -   DB MySQL: `localhost:3307` (User: `root`, Pass: `rootpassword`)
+*   **Lưu ý:** Hệ thống đã tích hợp `healthcheck` để đảm bảo Backend chỉ khởi động sau khi Database đã sẵn sàng kết nối.
+
+### 2. Triển khai Production (Docker Compose)
+Dành cho việc chạy thử nghiệm trong môi trường giống thực tế hoặc triển khai lên máy chủ. Cấu hình này giới hạn tài nguyên (RAM/CPU) và tối ưu hóa ảnh Docker.
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+*   **Cổng mặc định:** Frontend sẽ chạy trực tiếp ở cổng `80`.
+
+### 3. Giải thích các tệp Docker (Docker File Components)
+
+*   **`docker-compose.yml` (Dev):** 
+    -   Ánh xạ thư mục local vào container (`Volumes`) để hot-reload.
+    -   Giữ môi trường development nhất quán cho toàn đội ngũ.
+*   **`docker-compose.prod.yml` (Prod):** 
+    -   Giới hạn tài nguyên (RAM limit: 256MB/service) để ổn định server.
+    -   Sử dụng multi-stage build để giảm dung lượng ảnh.
+*   **`backend/Dockerfile`:** 
+    -   Dựa trên `node:18-alpine`.
+    -   Tự động chạy `npx prisma generate` để tạo Prisma Client trong container.
+*   **`frontend/dockerfile`:**
+    -   Sử dụng cơ chế `standalone` của Next.js (giảm từ 1GB xuống còn ~150MB).
+    -   Chia làm 3 giai đoạn: `deps` (cài thư viện), `builder` (biên dịch), `runner` (chạy app).
+
+---
+
+## ☁️ Hướng dẫn triển khai lên VPS (VPS Deployment Guide)
+
+Để đưa dự án lên một VPS (Ubuntu/Debian), hãy làm theo các bước sau:
+
+### Bước 1: Cài đặt Docker trên VPS
+Chạy lệnh sau để cài đặt Docker & Docker Compose:
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+```
+
+### Bước 2: Chuẩn bị mã nguồn & Cấu hình
+1. Clone dự án: `git clone <your-repo-url>`
+2. Di chuyển vào thư mục dự án: `cd mini-bi-dashboard`
+3. Cấu hình biến môi trường:
+   ```bash
+   cp backend/.env.example backend/.env
+   nano backend/.env
+   ```
+   *(Cập nhật `DATABASE_URL` và `JWT_SECRET` của bạn)*
+
+### Bước 3: Khởi chạy Production
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Bước 4: Cấu hình Nginx (Tùy chọn - Reverse Proxy)
+Để sử dụng tên miền (domain.com), bạn nên cài Nginx và cấu hình vhost:
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:80; # Trỏ về cổng frontend của docker-prod
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+### Bước 5: Cài đặt SSL (Certbot)
+```bash
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+---
+
+## 🛠️ Các lệnh hữu ích (Useful Commands)
+
+- **Database Migration:** `docker exec -it kernel404_backend npx prisma db push`
+- **Seed Data:** `docker exec -it kernel404_backend npx prisma db seed`
+    -   *Lưu ý: Script seed này tạo ra ~50,000 dòng dữ liệu mẫu để test hiệu năng. Nếu không cần, bạn có thể bỏ qua lệnh này hoặc xóa dòng `npx prisma db seed` trong `docker-compose.yml`.*
+- **Xem logs:** `docker compose logs -f`
+- **Dừng hệ thống:** `docker compose down`
+
+---
+
+## 🤝 Liên hệ (Contact)
+Nếu có thắc mắc trong quá trình cài đặt và DevOps, vui lòng liên hệ đội ngũ kỹ thuật.
