@@ -65,7 +65,16 @@ Dự án được tối ưu hóa cho containerization bằng Docker, hỗ trợ 
 ### 1. Phát triển local với Docker (Development)
 Sử dụng cấu hình này để có môi trường ổn định, hỗ trợ **Hot Reload** (code thay đổi trong máy của bạn sẽ được cập nhật ngay lập tức vào container).
 
-*   **Yêu cầu:** Đã cài đặt [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+#### 🪟 Cho Windows (Sử dụng Docker Desktop)
+*   **Yêu cầu:** Đã cài đặt [Docker Desktop](https://www.docker.com/products/docker-desktop/). Nên bật **WSL 2 backend** để đạt hiệu năng tốt nhất.
+*   **Cách chạy:** Mở PowerShell hoặc Terminal tại thư mục gốc và chạy:
+    ```powershell
+    docker compose up --build
+    ```
+
+#### 🐧 Cho Linux (Ubuntu/Debian/Fedora)
+*   **Yêu cầu:** Đã cài đặt [Docker Engine](https://docs.docker.com/engine/install/) và [Docker Compose Plugin](https://docs.docker.com/compose/install/).
+*   **Lưu ý:** Nếu chưa cấu hình [Post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/), bạn cần thêm `sudo` trước các lệnh.
 *   **Cách chạy:**
     ```bash
     docker compose up --build
