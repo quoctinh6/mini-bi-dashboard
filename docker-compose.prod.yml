@@ -1,33 +1,52 @@
+version: '3.8'
+
 services:
+  # 1. Database MySQL (Production)
   db:
     image: mysql:8.0
-    restart: unless-stopped
+    container_name: kernel404_db_prod
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
       MYSQL_DATABASE: mini_bi_dashboard
     volumes:
       - db_data_prod:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      interval: 15s
-      timeout: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 30s
     deploy:
       resources:
         limits:
           memory: 512M
 
+  # 2. Backend Node.js (Production)
   backend:
-    build: ./backend
-    restart: unless-stopped
+    build: 
+      context: ./backend
+      dockerfile: dockerfile
+    container_name: kernel404_backend_prod
+    restart: always
     ports:
       - "5000:5000"
+    env_file:          
+      - ./backend/.env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mysql://root:rootpassword@db:3306/mini_bi_dashboard
+      - DATABASE_URL=mysql://root:${DB_PASSWORD:-rootpassword}@db:3306/mini_bi_dashboard
       - PORT=5000
-    command: sh -c "npx prisma db push && node server.js"
+      - JWT_SECRET=${JWT_SECRET:-super_secret_key_change_me}
+      # Cấu hình Email (SMTP) nếu cần
+      - SMTP_HOST=${SMTP_HOST:-smtp.ethereal.email}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    # Prod command: Push schema + Seed Master Data (nhanh) + Start
+    command: >
+      sh -c "npx prisma db push && 
+             npx prisma db seed && 
+             node server.js"
     depends_on:
       db:
         condition: service_healthy
@@ -36,16 +55,22 @@ services:
         limits:
           memory: 256M
 
+  # 3. Frontend Next.js (Production)
   frontend:
     build:
       context: ./frontend
+      dockerfile: dockerfile
       target: runner
-    restart: unless-stopped
+      # Lưu ý: Next.js bake biến NEXT_PUBLIC vào lúc BUILD. 
+      # Nếu muốn động, bạn nên build lại image khi đổi API URL.
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000/api}
+    container_name: kernel404_frontend_prod
+    restart: always
     ports:
-      - "80:3000"
+      - "3000:3000" # Map ra 3000 hoặc 80 tùy bạn
     environment:
       - NODE_ENV=production
-    command: node server.js
     depends_on:
       - backend
     deploy:

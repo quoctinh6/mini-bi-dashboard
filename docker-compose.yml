@@ -25,7 +25,11 @@ services:
     container_name: kernel404_backend
     ports:
       - "5000:5000"
+    # Load đầy đủ biến từ backend/.env (bao gồm GEMINI_API_KEY, JWT_SECRET,...)
+    env_file:
+      - ./backend/.env
     environment:
+      # Ghi đè DATABASE_URL để dùng host 'db' của Docker thay vì localhost
       - DATABASE_URL=mysql://root:rootpassword@db:3306/mini_bi_dashboard
       - PORT=5000
     # Map thư mục code gốc vào Docker để bắt sự kiện thay đổi code (Hot Reload)
@@ -33,7 +37,8 @@ services:
       - ./backend:/app
       - /app/node_modules 
     command: >
-      sh -c "npx prisma db push && 
+      sh -c "npm install &&
+             npx prisma db push && 
              npx prisma db seed && # Xóa hoặc comment dòng này nếu không muốn tạo 50,000 dòng dữ liệu mẫu
              npm run dev"
     depends_on:

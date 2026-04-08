@@ -113,4 +113,11 @@ export const settingsServices = {
     }
 };
 
+export const aiServices = {
+    chat: async (data: { message: string; mode: 'chat' | 'chart'; history?: { role: string; content: string }[] }) => {
+        const response = await api.post('/ai/chat', data);
+        return response.data;
+    }
+};
+
 export default api;

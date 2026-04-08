@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { DashboardGrid, WidgetConfig, WidgetRegistry } from './DashboardGrid';
+import { DashboardGrid, WidgetConfig, WidgetRegistry, WidgetTemplate } from './DashboardGrid';
 import { KPICard } from '@/components/data/KPICard';
 import { MixedChart } from '@/components/charts/MixedChart';
 import { DonutChart } from '@/components/charts/DonutChart';
@@ -29,6 +29,108 @@ const widgetRegistry: WidgetRegistry = {
   GeoChart,
   DataTable,
 };
+
+// ════════════════════════════════════════════════
+// Widget Templates — danh sách widget có sẵn để kéo thả
+// ════════════════════════════════════════════════
+const WIDGET_TEMPLATES: WidgetTemplate[] = [
+  {
+    component: 'KPICard',
+    label: 'Thẻ KPI',
+    description: 'Hiển thị chỉ số KPI đơn',
+    category: 'kpi',
+    defaultW: 2,
+    defaultH: 1,
+    minW: 2,
+    minH: 1,
+    defaultProps: {
+      title: 'KPI Mới',
+      value: 0,
+      unit: '₫',
+      trend: 0,
+      trendDirection: 'neutral',
+    },
+  },
+  {
+    component: 'MixedChart',
+    label: 'Biểu đồ hỗn hợp',
+    description: 'Biểu đồ cột + đường',
+    category: 'chart',
+    defaultW: 6,
+    defaultH: 3,
+    minW: 3,
+    minH: 2,
+    defaultProps: {
+      data: [],
+      title: 'Biểu đồ hỗn hợp',
+      totalValue: 0,
+      unit: '₫',
+      trend: 0,
+    },
+  },
+  {
+    component: 'DonutChart',
+    label: 'Biểu đồ Donut',
+    description: 'Biểu đồ tròn cơ cấu',
+    category: 'chart',
+    defaultW: 2,
+    defaultH: 3,
+    minW: 2,
+    minH: 2,
+    defaultProps: {
+      data: [],
+      title: 'Cơ cấu',
+      totalValue: 0,
+      unit: '₫',
+      size: 130,
+      top: 3,
+    },
+  },
+  {
+    component: 'GaugeChart',
+    label: 'Biểu đồ Gauge',
+    description: 'Gauge bán nguyệt',
+    category: 'chart',
+    defaultW: 4,
+    defaultH: 3,
+    minW: 3,
+    minH: 2,
+    defaultProps: {
+      data: [],
+      title: 'Phân bổ',
+      totalValue: 0,
+      unit: '₫',
+    },
+  },
+  {
+    component: 'GeoChart',
+    label: 'Bản đồ Việt Nam',
+    description: 'Bản đồ mật độ theo tỉnh',
+    category: 'chart',
+    defaultW: 4,
+    defaultH: 3,
+    minW: 3,
+    minH: 2,
+    defaultProps: {
+      data: [],
+      title: 'Bản đồ Việt Nam',
+    },
+  },
+  {
+    component: 'DataTable',
+    label: 'Bảng dữ liệu',
+    description: 'Bảng dữ liệu chi tiết',
+    category: 'data',
+    defaultW: 4,
+    defaultH: 3,
+    minW: 3,
+    minH: 2,
+    defaultProps: {
+      data: [],
+      title: 'Bảng dữ liệu',
+    },
+  },
+];
 
 // ════════════════════════════════════════════════════
 // DashboardExample
@@ -383,7 +485,8 @@ export function DashboardExample({ hideSidebar }: { hideSidebar?: boolean }) {
             ) : (
               <DashboardGrid 
                 widgets={widgets} 
-                registry={widgetRegistry} 
+                registry={widgetRegistry}
+                widgetTemplates={WIDGET_TEMPLATES}
               />
             )}
           </main>

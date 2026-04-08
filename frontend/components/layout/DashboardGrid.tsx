@@ -6,8 +6,9 @@ import { cn } from '@/lib/utils';
 import {
   Lock, Unlock, RotateCcw, GripVertical, Maximize2, Minimize2,
   Plus, X, BarChart3, PieChart, Gauge, Table2, TrendingUp,
-  Save, Bookmark, Layers, Trash2,
+  Save, Bookmark, Layers, Trash2, Bot, Package,
 } from 'lucide-react';
+import { AIChatPanel } from './AIChatPanel';
 
 // ── CSS imports cho react-grid-layout ──
 import 'react-grid-layout/css/styles.css';
@@ -233,6 +234,10 @@ interface WidgetPickerProps {
   onSaveLayout: (name: string) => void;
   onDeleteLayout: (id: string) => void;
   onClose: () => void;
+  onAIDragStart: (widget: WidgetConfig) => void;
+  onAIDragEnd: () => void;
+  onAddWidget: (widget: WidgetConfig) => void;
+  onRequestEditMode: () => void;
 }
 
 function WidgetPicker({
@@ -245,8 +250,13 @@ function WidgetPicker({
   onSaveLayout,
   onDeleteLayout,
   onClose,
+  onAIDragStart,
+  onAIDragEnd,
+  onAddWidget,
+  onRequestEditMode,
 }: WidgetPickerProps) {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [pickerTab, setPickerTab] = useState<'ai' | 'widgets'>('ai');
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [saveName, setSaveName] = useState('');
   const saveInputRef = useRef<HTMLInputElement>(null);
@@ -357,63 +367,111 @@ function WidgetPicker({
         {/* ── Phân cách ── */}
         <div className="mx-4 border-t border-slate-700/40" />
 
-        {/* ── Category Tabs ── */}
+        {/* ── AI / Widgets Tab Switcher ── */}
         <div className="px-4 pt-3 pb-2">
           <div className="flex gap-1 p-0.5 bg-slate-800/40 rounded-lg">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all flex-1 justify-center',
-                  activeCategory === cat.id
-                    ? 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/30'
-                    : 'text-slate-500 hover:text-slate-300 border border-transparent'
-                )}
-              >
-                {cat.icon}
-                {cat.label}
-              </button>
-            ))}
+            <button
+              onClick={() => setPickerTab('ai')}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all flex-1 justify-center',
+                pickerTab === 'ai'
+                  ? 'bg-gradient-to-r from-fuchsia-500/15 to-blue-500/15 text-fuchsia-300 border border-fuchsia-500/30'
+                  : 'text-slate-500 hover:text-slate-300 border border-transparent'
+              )}
+            >
+              <Bot className="h-3.5 w-3.5" />
+              AI Assistant
+            </button>
+            <button
+              onClick={() => setPickerTab('widgets')}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all flex-1 justify-center',
+                pickerTab === 'widgets'
+                  ? 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/30'
+                  : 'text-slate-500 hover:text-slate-300 border border-transparent'
+              )}
+            >
+              <Package className="h-3.5 w-3.5" />
+              Widgets
+            </button>
           </div>
         </div>
 
-        {/* ── Draggable Widget Templates ── */}
-        <div key={activeCategory} className="px-4 pb-4 grid grid-cols-2 gap-2 animate-category-switch">
-          {filtered.map((template) => (
-            <div
-              key={template.component + template.label}
-              draggable
-              unselectable="on"
-              onDragStart={(e) => {
-                e.dataTransfer.setData('text/plain', '');
-                e.dataTransfer.effectAllowed = 'copy';
-                onDragStart(template);
-              }}
-              onDragEnd={onDragEnd}
-              className="group cursor-grab active:cursor-grabbing rounded-xl border border-slate-700/40 hover:border-fuchsia-500/40 bg-slate-900/50 hover:bg-slate-800/50 transition-all duration-200 overflow-hidden"
-            >
-              {/* Mini Preview */}
-              <div className="h-[72px] p-1.5">
-                <MiniPreview component={template.component} />
-              </div>
-              {/* Label */}
-              <div className="px-2.5 pb-2 pt-1">
-                <div className="text-[11px] font-medium text-slate-300 group-hover:text-white transition-colors truncate">
-                  {template.label}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[9px] text-slate-600 bg-slate-800/80 px-1 py-0.5 rounded">
-                    {template.defaultW}×{template.defaultH}
-                  </span>
-                  <span className="text-[9px] text-fuchsia-400/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                    kéo để thêm
-                  </span>
-                </div>
+        {/* ── AI Chat Panel ── */}
+        {pickerTab === 'ai' && (
+          <div className="flex-1 min-h-0 flex flex-col">
+            <AIChatPanel
+              onDragStart={onAIDragStart}
+              onDragEnd={onAIDragEnd}
+              onAddWidget={onAddWidget}
+              onRequestEditMode={onRequestEditMode}
+            />
+          </div>
+        )}
+
+        {/* ── Widgets Tab Content ── */}
+        {pickerTab === 'widgets' && (
+          <>
+            {/* ── Category Tabs ── */}
+            <div className="px-4 pt-1 pb-2">
+              <div className="flex gap-1 p-0.5 bg-slate-800/40 rounded-lg">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all flex-1 justify-center',
+                      activeCategory === cat.id
+                        ? 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/30'
+                        : 'text-slate-500 hover:text-slate-300 border border-transparent'
+                    )}
+                  >
+                    {cat.icon}
+                    {cat.label}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* ── Draggable Widget Templates ── */}
+            <div key={activeCategory} className="px-4 pb-4 grid grid-cols-2 gap-2 animate-category-switch">
+              {filtered.map((template) => (
+                <div
+                  key={template.component + template.label}
+                  draggable
+                  unselectable="on"
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', '');
+                    e.dataTransfer.effectAllowed = 'copy';
+                    onRequestEditMode();
+                    onDragStart(template);
+                  }}
+                  onDragEnd={onDragEnd}
+                  className="group cursor-grab active:cursor-grabbing rounded-xl border border-slate-700/40 hover:border-fuchsia-500/40 bg-slate-900/50 hover:bg-slate-800/50 transition-all duration-200 overflow-hidden"
+                >
+                  {/* Mini Preview */}
+                  <div className="h-[72px] p-1.5">
+                    <MiniPreview component={template.component} />
+                  </div>
+                  {/* Label */}
+                  <div className="px-2.5 pb-2 pt-1">
+                    <div className="text-[11px] font-medium text-slate-300 group-hover:text-white transition-colors truncate">
+                      {template.label}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[9px] text-slate-600 bg-slate-800/80 px-1 py-0.5 rounded">
+                        {template.defaultW}×{template.defaultH}
+                      </span>
+                      <span className="text-[9px] text-fuchsia-400/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                        kéo để thêm
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* CSS Animation */}
@@ -550,10 +608,7 @@ export function DashboardGrid({
     if (editableProp !== undefined) setIsEditable(editableProp);
   }, [editableProp]);
 
-  // Close picker when exiting edit mode
-  useEffect(() => {
-    if (!isEditable) setShowPicker(false);
-  }, [isEditable]);
+  // (Picker no longer requires edit mode — removed auto-close)
 
   // ── Layout conversion ──
   const layout: Layout[] = useMemo(
@@ -652,6 +707,42 @@ export function DashboardGrid({
     setSavedLayouts(prev => prev.filter(l => l.id !== id));
   }, []);
 
+  // ── AI Drag handlers ──
+  const [droppingAIWidget, setDroppingAIWidget] = useState<WidgetConfig | null>(null);
+
+  const handleAIDragStart = useCallback((widget: WidgetConfig) => {
+    setIsEditable(true); // Auto switch to edit mode
+    // Create a pseudo-template for the dropping item
+    setDroppingTemplate({
+      component: widget.component,
+      label: widget.props?.title || 'AI Widget',
+      category: 'ai',
+      defaultW: widget.w,
+      defaultH: widget.h,
+      defaultProps: widget.props || {},
+    });
+    setDroppingAIWidget(widget);
+  }, []);
+
+  const handleAIDragEnd = useCallback(() => {
+    setDroppingTemplate(null);
+    setDroppingAIWidget(null);
+  }, []);
+
+  const handleAddWidgetFromAI = useCallback((widget: WidgetConfig) => {
+    setIsEditable(true); // Auto switch to edit mode
+    // Find the max Y position to place below existing widgets
+    const maxY = currentWidgets.reduce((max, w) => Math.max(max, w.y + w.h), 0);
+    const newWidget: WidgetConfig = {
+      ...widget,
+      i: `ai-${widget.component.toLowerCase()}-${Date.now()}`,
+      x: 0,
+      y: maxY,
+    };
+    const updated = [...currentWidgets, newWidget];
+    pushHistory(updated);
+  }, [currentWidgets, pushHistory]);
+
   // ── Dropping item config for react-grid-layout ──
   const droppingItem = useMemo(() => {
     if (!droppingTemplate) return undefined;
@@ -725,34 +816,42 @@ export function DashboardGrid({
         </div>
       )}
 
-      {/* ── FAB "+" — chỉ hiện khi editable ── */}
-      {isEditable && widgetTemplates.length > 0 && (
-        <button
-          onClick={() => setShowPicker((prev) => !prev)}
-          className={cn(
-            'fixed bottom-6 right-6 z-[55] h-14 w-14 flex items-center justify-center rounded-full shadow-xl transition-all duration-300',
-            showPicker
-              ? 'bg-slate-700 hover:bg-slate-600 shadow-slate-900/50'
-              : 'bg-gradient-to-br from-fuchsia-500 to-blue-500 hover:from-fuchsia-400 hover:to-blue-400 shadow-fuchsia-500/30 hover:shadow-fuchsia-500/50 hover:scale-110'
-          )}
-          title="Thêm widget mới"
-        >
-          <Plus className={cn('h-6 w-6 text-white transition-transform duration-300', showPicker && 'rotate-45')} />
-        </button>
-      )}
+      {/* ── FAB "+" — LUÔN HIỂN THỊ (không cần edit mode) ── */}
+      <button
+        onClick={() => setShowPicker((prev) => !prev)}
+        className={cn(
+          'fixed bottom-6 right-6 z-[55] h-14 w-14 flex items-center justify-center rounded-full shadow-xl transition-all duration-300',
+          showPicker
+            ? 'bg-slate-700 hover:bg-slate-600 shadow-slate-900/50'
+            : 'bg-gradient-to-br from-fuchsia-500 to-blue-500 hover:from-fuchsia-400 hover:to-blue-400 shadow-fuchsia-500/30 hover:shadow-fuchsia-500/50 hover:scale-110'
+        )}
+        title="Thêm widget / AI Chat"
+      >
+        {showPicker
+          ? <X className="h-6 w-6 text-white transition-transform duration-300" />
+          : <Plus className="h-6 w-6 text-white transition-transform duration-300" />
+        }
+      </button>
 
       {/* ── Widget Picker Panel ── */}
-      {showPicker && isEditable && (
+      {showPicker && (
         <WidgetPicker
           templates={widgetTemplates}
           categories={categories}
           savedLayouts={allLayouts}
-          onDragStart={(t) => setDroppingTemplate(t)}
+          onDragStart={(t) => {
+            setIsEditable(true);
+            setDroppingTemplate(t);
+          }}
           onDragEnd={() => setDroppingTemplate(null)}
           onRestoreLayout={handleRestoreLayout}
           onSaveLayout={handleSaveLayout}
           onDeleteLayout={handleDeleteLayout}
           onClose={() => setShowPicker(false)}
+          onAIDragStart={handleAIDragStart}
+          onAIDragEnd={handleAIDragEnd}
+          onAddWidget={handleAddWidgetFromAI}
+          onRequestEditMode={() => setIsEditable(true)}
         />
       )}
 

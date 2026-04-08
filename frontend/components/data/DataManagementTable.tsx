@@ -281,7 +281,7 @@ export function DataManagementTable({
                 <td className="px-4 whitespace-nowrap text-right align-middle">
                   <div className="flex items-center justify-end space-x-3">
                     <button onClick={() => onEdit?.(row)} title="Sửa bản ghi" className="p-1.5 rounded bg-slate-800 text-slate-400 hover:text-blue-400 hover:bg-slate-700 transition"><Edit2 className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => onDelete?.(row.id)} title="Xóa bản ghi" className="p-1.5 rounded bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-700 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                    
                   </div>
                 </td>
               </tr>
