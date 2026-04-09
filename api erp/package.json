@@ -1,0 +1,12 @@
+{
+  "name": "api-erp-mock",
+  "version": "1.0.0",
+  "description": "Mock ERP API to test Cấu hình API Đồng Bộ",
+  "main": "db.json",
+  "scripts": {
+    "start": "json-server --watch db.json --port 5050"
+  },
+  "dependencies": {
+    "json-server": "^0.17.4"
+  }
+}

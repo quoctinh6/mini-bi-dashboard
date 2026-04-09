@@ -85,8 +85,8 @@ export const dataServices = {
         });
         return response.data;
     },
-    syncApiData: async () => {
-        const response = await api.post('/data/sync');
+    syncApiData: async (apiUrl?: string) => {
+        const response = await api.post('/data/sync', { apiUrl });
         return response.data;
     }
 };

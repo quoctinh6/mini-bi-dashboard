@@ -169,6 +169,11 @@ sudo certbot --nginx -d your-domain.com
 - **Dừng hệ thống:** `docker compose down`
 
 ---
+## cách chạy API erp 
 
-## 🤝 Liên hệ (Contact)
-Nếu có thắc mắc trong quá trình cài đặt và DevOps, vui lòng liên hệ đội ngũ kỹ thuật.
+```bash
+cd  api erp
+npm install
+npx json-server --watch db.json --port 5050 --host 0.0.0.0
+```
+

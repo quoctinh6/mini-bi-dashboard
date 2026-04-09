@@ -32,7 +32,7 @@ export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean })
   // ── Sync / Upload State ──
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isApiConfigOpen, setIsApiConfigOpen] = React.useState(false);
-  const [apiUrl, setApiUrl] = React.useState('https://erp.kernel404.dev/api/v1/sync');
+  const [apiUrl, setApiUrl] = React.useState('http://127.0.0.1:5050/transactions.');
 
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -90,7 +90,7 @@ export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean })
       // 1. Optional Sync (with robustness)
       if (config.syncFirst) {
         try {
-          await dataServices.syncApiData();
+          await dataServices.syncApiData(apiUrl);
           invalidateData();
         } catch (syncErr: any) {
           console.warn("Sync API skipped or failed:", syncErr.message);
@@ -163,7 +163,7 @@ export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean })
     
     try {
       setIsSyncing(true);
-      const res = await dataServices.syncApiData();
+      const res = await dataServices.syncApiData(apiUrl);
       if (res.success) {
         alert(res.message + `\nĐã nhận ${res.summary.totalInserted} bản ghi.`);
         invalidateData();
@@ -232,10 +232,6 @@ export function DataManagementLayout({ hideSidebar }: { hideSidebar?: boolean })
           </div>
           
           <div className="flex items-center space-x-6">
-             <button className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#1C2541]/80 hover:bg-[#1C2541] transition">
-                 <Bell className="h-[18px] w-[18px] text-slate-300" strokeWidth={2.5}/>
-                 <span className="absolute top-[8px] right-[10px] h-[5px] w-[5px] rounded-full bg-red-500"></span>
-             </button>
           </div>
         </header>
 

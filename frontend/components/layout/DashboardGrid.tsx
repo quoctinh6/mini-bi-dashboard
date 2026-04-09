@@ -282,7 +282,7 @@ function WidgetPicker({
 
   return (
     <div
-      className="fixed bottom-24 right-6 z-[60] w-[360px] h-[550px] bg-[#0d1120] border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/80 flex flex-col origin-bottom-right"
+      className="fixed bottom-24 right-6 z-[60] w-[360px] h-[750px] bg-[#0d1120] border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/80 flex flex-col origin-bottom-right"
       style={{ animation: 'pickerPopup 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}
     >
       {/* ── Header ── */}

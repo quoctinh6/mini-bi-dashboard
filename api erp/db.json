@@ -1,0 +1,49 @@
+{
+  "transactions": [
+    {
+      "orderDate": "2026-04-01T08:00:00Z",
+      "revenue": 25000,
+      "cost": 12000,
+      "quantity": 5,
+      "provinceCode": "HN",
+      "categoryCode": "ELEC",
+      "departmentCode": "SALES"
+    },
+    {
+      "orderDate": "2026-04-02T09:30:00Z",
+      "revenue": 18000,
+      "cost": 7000,
+      "quantity": 2,
+      "provinceCode": "HCM",
+      "categoryCode": "FURN",
+      "departmentCode": "MKT"
+    },
+    {
+      "orderDate": "2026-04-03T14:15:00Z",
+      "revenue": 45000,
+      "cost": 20000,
+      "quantity": 10,
+      "provinceCode": "DN",
+      "categoryCode": "CLOTH",
+      "departmentCode": "OPS"
+    },
+    {
+      "orderDate": "2026-04-04T10:45:00Z",
+      "revenue": 8000,
+      "cost": 3000,
+      "quantity": 1,
+      "provinceCode": "HN",
+      "categoryCode": "FURN",
+      "departmentCode": "SALES"
+    },
+    {
+      "orderDate": "2026-04-05T16:20:00Z",
+      "revenue": 32000,
+      "cost": 15000,
+      "quantity": 7,
+      "provinceCode": "HCM",
+      "categoryCode": "ELEC",
+      "departmentCode": "OPS"
+    }
+  ]
+}
